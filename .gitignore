@@ -1,0 +1,6 @@
+_*
+*.tar
+*.sha256
+*.log
+config/*
+distro/*
