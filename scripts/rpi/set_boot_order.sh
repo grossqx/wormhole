@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# Configuration for rpi-eeprom BOOT_ORDER based on user specification
+# 1 = SD CARD | 4 = USB-MSD | 6 = NVME | F = RESTART/LOOP
+# The boot order values are read right-to-left.
+
+BOOT_ORDER_SD="0xf41"   # SD first (1), then USB (4). This is the default.
+BOOT_ORDER_USB="0xf14"  # USB first (4), then SD (1).
+BOOT_ORDER_NVME="0xf46" # NVMe first (6), then USB (4).
+
+function usage() {
+    echo "Usage: sudo $0 <option>"
+    echo "Options:"
+    echo "  -current  : Detects the current boot device (SD/USB/NVMe) and sets the boot order to prioritize it."
+    echo "  -sd       : Sets priority to the SD card (BOOT_ORDER=$BOOT_ORDER_SD - SD -> USB)."
+    echo "  -usb      : Sets priority to the USB device (BOOT_ORDER=$BOOT_ORDER_USB - USB -> SD)."
+    echo "  -nvme     : Sets priority to the NVMe device (BOOT_ORDER=$BOOT_ORDER_NVME - NVMe -> USB)."
+    echo ""
+    echo "The script requires sudo privileges to apply the changes."
+    exit 1
+}
+
+function check_boot_order_explicitly_set() {
+    local current_order
+    current_order=$(rpi-eeprom-config 2>/dev/null | grep -E "^BOOT_ORDER=" | awk -F= '{print $2}' | tr -d '[:space:]')
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to read EEPROM configuration." >&2
+        return 1
+    fi
+    if [ -n "$current_order" ]; then
+        echo "BOOT_ORDER is explicitly set to: $current_order"
+        return 0
+    else
+        echo "BOOT_ORDER is NOT explicitly set."
+        return 1
+    fi
+}
+
+function get_current_boot_order() {
+    local boot_device_info
+    boot_device_info=$(mount | grep " / " | awk '{print $1}')
+    if [[ $boot_device_info == *"/dev/mmcblk"* ]]; then
+        echo "Detected boot from SD Card. Prioritizing SD ($BOOT_ORDER_SD)."
+        TARGET_ORDER=$BOOT_ORDER_SD
+    elif [[ $boot_device_info == *"/dev/nvme"* || $(lsblk -o TRAN $boot_device_info 2>/dev/null) == *pci* ]]; then
+        echo "Detected boot from NVMe device. Prioritizing NVMe ($BOOT_ORDER_NVME)."
+        TARGET_ORDER=$BOOT_ORDER_NVME
+    elif [[ $boot_device_info == *"/dev/sd"* ]]; then
+        echo "Detected boot from USB/external device. Prioritizing USB ($BOOT_ORDER_USB)."
+        TARGET_ORDER=$BOOT_ORDER_USB
+    else
+        echo "Could not reliably determine boot device type. Defaulting to SD Card priority ($BOOT_ORDER_SD)."
+        TARGET_ORDER=$BOOT_ORDER_SD
+    fi
+}
+
+function get_current_eeprom_config() {
+    CURRENT_CONFIG=$(rpi-eeprom-config 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to read current EEPROM configuration with 'rpi-eeprom-config'." >&2
+        exit 1
+    fi
+    CURRENT_ORDER=$(echo "$CURRENT_CONFIG" | grep -E "^BOOT_ORDER=" | awk -F= '{print $2}' | tr -d '[:space:]')
+}
+
+function apply_config() {
+    local temp_config_file="$1"
+    local new_order="$2"
+    echo "Attempting to change BOOT_ORDER to: $new_order"
+    if [[ "$CURRENT_ORDER" = "$new_order" ]] || \
+       ( [ -z "$CURRENT_ORDER" ] && [ "$new_order" = "$BOOT_ORDER_SD" ] ); then
+        echo "The current BOOT_ORDER is already set to $new_order (or the default). No change required."
+        return 0
+    fi
+    echo "$CURRENT_CONFIG" > "$temp_config_file"
+    if [ -n "$CURRENT_ORDER" ]; then
+        sed -i.bak "s/^BOOT_ORDER=.*/BOOT_ORDER=$new_order/" "$temp_config_file"
+        rm -f "${temp_config_file}.bak"
+        echo "Existing BOOT_ORDER=$CURRENT_ORDER was found and replaced."
+    else
+        echo "BOOT_ORDER=$new_order" >> "$temp_config_file"
+        echo "BOOT_ORDER was not found and will be added."
+    fi
+    echo "Applying new configuration from $temp_config_file."
+    echo "This schedules the EEPROM update for the next reboot."
+    
+    rpi-eeprom-config --apply "$temp_config_file"
+    if [ $? -eq 0 ]; then
+        echo "SUCCESS: Boot order set to $new_order. Reboot to apply."
+        return 0
+    else
+        echo "ERROR: Failed to apply EEPROM configuration." >&2
+        return 1
+    fi
+}
+
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+if [ "$1" = "-check" ]; then
+    check_boot_order_explicitly_set
+    exit $?
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Error: This script must be run as root (use sudo) for configuration changes." >&2
+    usage
+fi
+
+case "$1" in
+    -sd)
+        TARGET_ORDER=$BOOT_ORDER_SD
+        echo "Requested: SD Card priority ($TARGET_ORDER)."
+        ;;
+    -usb)
+        TARGET_ORDER=$BOOT_ORDER_USB
+        echo "Requested: USB priority ($TARGET_ORDER)."
+        ;;
+    -nvme)
+        TARGET_ORDER=$BOOT_ORDER_NVME
+        echo "Requested: NVMe priority ($TARGET_ORDER)."
+        ;;
+    -current)
+        get_current_boot_order
+        ;;
+    *)
+        echo "Error: Invalid option '$1'." >&2
+        usage
+        ;;
+esac
+
+get_current_eeprom_config
+
+TEMP_CONF=$(mktemp)
+trap "rm -f $TEMP_CONF" EXIT INT TERM
+
+apply_config "$TEMP_CONF" "$TARGET_ORDER"
+exit $?
