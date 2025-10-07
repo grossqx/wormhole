@@ -1,0 +1,21 @@
+[Unit]
+Description=Wormhole API Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/bin/bash ___EXEC_START_PATH___
+User=wormhole
+Group=wormhole
+# video for RPI hardware access (/dev/vcio);
+SupplementaryGroups=video
+# Allow child processes to send notifications
+NotifyAccess=all
+Restart=on-failure
+RestartSec=15s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Wormhole Installer Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/bin/bash ___EXEC_START_PATH___
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
