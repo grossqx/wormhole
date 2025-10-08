@@ -14,7 +14,6 @@ data=$(echo "$response" | sed '$d') # Remove the last line to get the data
 if [[ "$http_code" == "200" ]]; then
    echo $data
 else
-   echo
    echo "${T_RED}Error: ${http_code} - Response body: ${data}${T_NC}"
    exit 1
 fi

@@ -635,7 +635,7 @@ if [[ $API_SERVER_STATUS == "healthy" ]]; then
 else
     echo -e "${T_YELLOW}\tServer status: ${API_SERVER_STATUS}${T_NC}"
 fi
-server_pollrate=$(${base_dir}/utils/user_request.sh "${api_domain}${endpoint_get_pollrate}" "${api_key}")
+server_pollrate=$(${base_dir}/utils/get_request.sh "${api_domain}${endpoint_get_pollrate}" "${api_key}")
 result=$?
 if [ $result -eq 0 ]; then
     echo -e "\tServer pollrate: ${server_pollrate} ms"
@@ -643,7 +643,7 @@ else
     echo -e "${T_YELLOW}\tFailed to get pollrate from the server.${T_NC}"
 fi
 echo -e "${T_BLUE}[3/3] Requesting username from the server...${T_NC}"
-install_user=$(${base_dir}/utils/user_request.sh "${api_domain}${endpoint_get_username}" "${api_key}")
+install_user=$(${base_dir}/utils/get_request.sh "${api_domain}${endpoint_get_username}" "${api_key}")
 result=$?
 if [ $result -eq 0 ]; then
     echo -e "${T_GREEN}\tIdentified user: ${install_user}${T_NC}"
