@@ -3,11 +3,10 @@ Raspberry Pi VPN server installer
 
 ## TODOs:
 
-client script:
+wormhole-installer:
 - fix incorrect network interface being picked when pi is on both eth and wifi
 
-RPi setup:
-- force boot from the current device on install start (make sure current device is set to boot as priority to finalize the installation whatever gets connected)
+wormholeinstalld.sh:
 - backup and restore docker storage
 - add migration to install process
 - nfs server (userful.sh)

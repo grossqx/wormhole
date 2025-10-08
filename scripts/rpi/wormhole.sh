@@ -125,7 +125,7 @@ case $command in
             exit 0
         fi
         ;;
-    config-update)
+    config)
         ${base_dir}/config_update.sh "$2" "$3"
         ;;
     *)
