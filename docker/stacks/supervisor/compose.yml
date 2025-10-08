@@ -1,0 +1,37 @@
+services:  
+  dockge:
+    container_name: dockge
+    image: louislam/dockge:1.5.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${STORAGE_PATH}/dockge/data:/app/data
+      - ${STACKS_DIR}:/opt/stacks
+    environment:
+      - DOCKGE_STACKS_DIR=/opt/stacks
+    restart: unless-stopped
+    ports:
+      - 5001:5001
+  uptime-kuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma:1
+    volumes:
+      - ${STORAGE_PATH}/uptime-kuma/data:/app/data
+    restart: always
+    ports:
+      - 3001:3001
+  glances:
+    container_name: glances
+    image: nicolargo/glances:latest
+    pid: host
+    # network_mode: host
+    environment:
+      - TZ=${TZ}
+      - GLANCES_OPT=-w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock
+      - /etc/os-release:/etc/os-release:ro
+    restart: always
+    ports:
+      - 61208:61208
+      - 61209:61209

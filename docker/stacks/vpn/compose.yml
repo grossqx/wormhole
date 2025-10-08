@@ -1,0 +1,99 @@
+networks:
+  private_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.2.0.0/24
+services:
+  unbound:
+    container_name: unbound
+    image: mvance/unbound-rpi:latest
+    # image: alpinelinux/unbound:latest-aarch64
+    # image: madnuttah/unbound:latest 
+    hostname: unbound
+    env_file: .env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
+    networks:
+      private_network:
+        ipv4_address: 10.2.0.200
+    restart: unless-stopped
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    hostname: pihole
+    volumes:
+      - ${STORAGE_PATH}/pihole/etc-pihole/:/etc/pihole/
+      - ${STORAGE_PATH}/pihole/etc-dnsmasq.d/:/etc/dnsmasq.d/
+    cap_add:
+      - NET_ADMIN
+    networks:
+      private_network:
+        ipv4_address: 10.2.0.100
+    env_file: .env
+    environment:
+      - TZ=${TZ}
+      - PIHOLE_UID=${PUID}
+      - PIHOLE_GID=${PGID}
+      # - PIHOLE_DNS_='10.2.0.200#53'
+      - WEBPASSWORD=${WEBPASSWORD}
+      # - DNSMASQ_LISTENING: local
+      - DNSMASQ_LISTENING=all
+    ports:
+      - ${PIHOLE_UI_PORT}:80
+      - 53:53/tcp
+      - 53:53/udp
+    depends_on:
+      - unbound
+    restart: unless-stopped
+  wireguard:
+    image: linuxserver/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      # - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    volumes:
+      - ${STORAGE_PATH}/wireguard/wg_confs:/config/wg_confs
+    networks:
+      private_network:
+        ipv4_address: 10.2.0.99
+    env_file: .env
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - SERVERURL=${WIREGUARD_URL}
+      - SERVERPORT=${WIREGUARD_PORT}
+      - PEERDNS=10.2.0.100
+      - PEERS=wormhole
+    ports:
+      - ${WIREGUARD_UI_PORT}:${WIREGUARD_UI_PORT}
+      - ${WIREGUARD_PORT}:51820/udp   # Port 51820 from setup 1 for VPN tunnel
+    depends_on:
+      - pihole
+    restart: unless-stopped
+  wg-portal:
+    image: wgportal/wg-portal:v2
+    container_name: wg-portal
+    network_mode: service:wireguard
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ${STORAGE_PATH}/wireguard/wg_confs:/etc/wireguard
+      - ${STORAGE_PATH}/wg-portal/data:/app/data
+      - ${CONFIG_DIR}/wg-portal:/app/config
+    environment:
+      - TZ=${TZ}
+    depends_on:
+      - wireguard
+    restart: unless-stopped
