@@ -14,14 +14,13 @@ API_URL="$1"
 BEARER_TOKEN="$2"
 LINE_NUMBER="$3"
 PREFIX="$4"
-
 TIMESTAMP=$(date +%s%3N)
+
 # Retry settings
 retries=10
 retry_timeout=1.0
 current_timeout=$retry_timeout
 for ((try_number=1; try_number<=retries; try_number++)); do
-    # Create a payload
     PAYLOAD=$(jq --null-input \
                 --argjson timestamp "$TIMESTAMP" \
                 --argjson line "$LINE_NUMBER" \
@@ -41,12 +40,8 @@ for ((try_number=1; try_number<=retries; try_number++)); do
     RESPONSE_BODY=$(cat "$temp_file")
     rm "$temp_file"
 
-    # Check response
     HTTP_STATUS=$(echo "$CURL_OUTPUT" | sed -n 's/HTTP_CODE://p')
     if [ "$curl_exit_code" -eq 0 ] && [ "$HTTP_STATUS" -eq 200 ]; then
-        # On success, clear the retry line from stderr and proceed
-        # printf >&2 "\033[K"
-        # Process response data on success
         SUCCESS=$(echo "$RESPONSE_BODY" | jq -r '.success')
         STATUS=$(echo "$RESPONSE_BODY" | jq -r '.status')
         LINE=$(echo "$RESPONSE_BODY" | jq -r '.line')
@@ -67,9 +62,7 @@ for ((try_number=1; try_number<=retries; try_number++)); do
             exit 0
         fi
     fi
-    # If not the last try, print retry message to stderr and wait
     if [ "$try_number" -lt "$retries" ] && [ $HTTP_STATUS != 201 ]; then
-        # printf >&2 "\033[KRetrying ${try_number}/${retries}...\r"
         sleep "$current_timeout"
         current_timeout="$(echo "$current_timeout + $retry_timeout" | bc)"
     fi
