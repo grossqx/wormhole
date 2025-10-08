@@ -19,17 +19,18 @@ function extract_embedded_file_simple() {
         echo "Error: Start line for ${name} not found in $0"
         return 1
     fi
-    local file_path=$(sed -n "${start_line}s/^___START_FILE_CONTENT___${name}___\(.*\)___$/\1/p" "$0")
-    if [[ -z "$file_path" ]]; then
+    local file_path_literal=$(sed -n "${start_line}s/^___START_FILE_CONTENT___${name}___\(.*\)___$/\1/p" "$0")
+    if [[ -z "$file_path_literal" ]]; then
         echo "Error: Extract file for ${name} path not found in $0"
         return 1
     fi
+    local file_path=$(eval echo "$file_path_literal")
     local end_line=$(awk "NR > $start_line && /^EOF$/ {print NR; exit}" "$0")
     if [[ -z "$end_line" ]]; then
         echo "Error: EOF for ${name} not found in $0"
         return 1
     fi
-    mkdir -p $(dirname "$file_path")
+    mkdir -p "$(dirname "$file_path")"
     sed -n "$(($start_line + 1)),$(($end_line - 1))p" "$0" > "$file_path"
     chmod +x "${file_path}"
     echo "Extracted ${name} to ${file_path}"
@@ -81,7 +82,7 @@ WH_CRYPTO_KEY=""
 WH_IP_ADDR=""
 WH_DOMAIN=""
 WH_WIREGUARD_PORT=""
-
+WH_PATH=""
 
 ## ===============================================================================================================
 ## [WH] Constant variables
@@ -89,8 +90,8 @@ WH_WIREGUARD_PORT=""
 binary_name="wormhole"
 connectivity_test_host="8.8.8.8"
 firstrun_log_path="/boot/firstrun.log"
-installer_dir="/opt/wormhole/installer"
 library_dir="/etc/profile.d"
+wormhole_home_path="/home/wormhole"
 systemd_service_dir="/etc/systemd/system"
 wormhole_uid=950
 wormhole_gid=950
@@ -101,10 +102,10 @@ wormhole_groups="gpio,i2c,spi"
 ## ===============================================================================================================
 ## [WH] Other variables
 ## ===============================================================================================================
+installer_dir="${WH_PATH}/installer"
 install_log_endpoint="${WH_SERVER_API_URL}/wh/install_log_write"
 install_log_script="${installer_dir}/report_install_progress.sh"
 firstrun_backup="/home/firstrun_backup.sh"
-wormhole_home_path="/home/wormhole"
 wormhole_install_log_path="${wormhole_home_path}/wormhole_install.log"
 symlink_path="/usr/bin/${binary_name}"
 wormhole_log_path="/var/log/wormhole.log"
@@ -148,6 +149,7 @@ WH_CRYPTO_KEY="${WH_CRYPTO_KEY}"
 WH_IP_ADDR="${WH_IP_ADDR}"
 WH_DOMAIN="${WH_DOMAIN}"
 WH_WIREGUARD_PORT="${WH_WIREGUARD_PORT}"
+WH_PATH="${WH_PATH}"
 WH_HOME="${wormhole_home_path}"
 WH_LOG_FILE="${wormhole_log_path}"
 # --------------------------
@@ -205,7 +207,8 @@ extract_file "update" 2>&1 | log
 
 echo "[7/17] Creating a symlink at ${symlink_path}." | log
 main_binary_file=$(get_file_unpack_path "$0" "wormhole" 2> >(log))
-ln -s "${main_binary_file}" "${symlink_path}" | log
+main_binary_path=$(eval echo "$main_binary_file")
+ln -s "${main_binary_path}" "${symlink_path}" | log
 
 echo "[8/17] Extracting wormhole helper scripts..." | log
 extract_file "initial_update" 2>&1 | log

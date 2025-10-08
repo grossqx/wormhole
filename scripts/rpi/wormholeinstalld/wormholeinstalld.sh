@@ -30,6 +30,7 @@ required_vars=(
     "WH_IP_ADDR"
     "WH_DOMAIN"
     "WH_WIREGUARD_PORT"
+    "WH_PATH"
     "WH_HOME"
     "WH_LOG_FILE"
 )
@@ -256,7 +257,6 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Constant variables
 installer_name="wormholeinstalld"
-distro_dir="/opt/wormhole"
 library_dir="/etc/profile.d"
 systemd_service_dir="/etc/systemd/system"
 last_log_time_file="/tmp/wormhole_last_log_time.tmp"
@@ -271,16 +271,16 @@ marker_close="___"
 
 # Other variables
 install_log_path="${WH_HOME}/wormhole_install.log"
-installer_dir="${distro_dir}/installer"
-repository_dir="${distro_dir}/repos"
-main_script="${distro_dir}/wormhole.sh"
-third_party_scripts_dir="${distro_dir}/third_party"
+installer_dir="${WH_PATH}/installer"
+repository_dir="${WH_PATH}/repos"
+main_script="${WH_PATH}/wormhole.sh"
+third_party_scripts_dir="${WH_PATH}/third_party"
 get_pollrate_endpoint="${WH_SERVER_API_URL}/wh/get_pollrate_rpi"
 install_log_endpoint="${WH_SERVER_API_URL}/wh/install_log_write"
 check_config_endpoint="${WH_SERVER_API_URL}/wh/rpi.check_config"
 install_log_script="${installer_dir}/report_install_progress.sh"
 systemd_service_filename="${installer_name}.service"
-systemd_service_path="/etc/systemd/system/${systemd_service_filename}"
+systemd_service_path="${systemd_service_dir}/${systemd_service_filename}"
 checkpoint_boot="${WH_HOME}/.checkpoint-boot"
 checkpoint_stage="${WH_HOME}/.checkpoint-stage"
 wh_prefix="WH"

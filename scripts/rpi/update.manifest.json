@@ -2,7 +2,7 @@
     "files": {
         "wormholed": {
             "source": "/rpi/wormholed/wormholed.sh",
-            "path": "/opt/wormhole/installer/wormholed.sh"
+            "path": "${WH_PATH}/installer/wormholed.sh"
         },
         "wormholed-service": {
             "source": "/rpi/wormholed/wormholed.service",
@@ -10,7 +10,7 @@
         },
         "wormholeinstalld": {
             "source": "/rpi/wormholeinstalld/wormholeinstalld.sh",
-            "path": "/opt/wormhole/installer/wormholeinstalld.sh"
+            "path": "${WH_PATH}/installer/wormholeinstalld.sh"
         },
         "wormholeinstalld-service": {
             "source": "/rpi/wormholeinstalld/wormholeinstalld.service",
@@ -26,71 +26,71 @@
         },
         "wormhole": {
             "source": "/rpi/wormhole.sh",
-            "path": "/opt/wormhole/wormhole.sh"
+            "path": "${WH_PATH}/wormhole.sh"
         },
         "update": {
             "source": "/rpi/update.sh",
-            "path": "/opt/wormhole/update.sh"
+            "path": "${WH_PATH}/update.sh"
         },
         "docker_install": {
             "source": "/rpi/docker_install.sh",
-            "path": "/opt/wormhole/installer/docker_install.sh"
+            "path": "${WH_PATH}/installer/docker_install.sh"
         },
         "docker_update_config": {
             "source": "/rpi/docker_update_config.sh",
-            "path": "/opt/wormhole/docker_update_config.sh"
+            "path": "${WH_PATH}/docker_update_config.sh"
         },
         "docker_update_env": {
             "source": "/rpi/docker_update_env.sh",
-            "path": "/opt/wormhole/docker_update_env.sh"
+            "path": "${WH_PATH}/docker_update_env.sh"
         },
         "docker_manage": {
             "source": "/rpi/docker_manage.sh",
-            "path": "/opt/wormhole/docker_manage.sh"
+            "path": "${WH_PATH}/docker_manage.sh"
         },
         "embed_extract_files": {
             "source": "/common/embed_extract_files.sh",
-            "path": "/opt/wormhole/installer/embed_extract_files.sh"
+            "path": "${WH_PATH}/installer/embed_extract_files.sh"
         },
         "read_install_progress": {
             "source": "/common/read_install_progress.sh",
-            "path": "/opt/wormhole/installer/read_install_progress.sh"
+            "path": "${WH_PATH}/installer/read_install_progress.sh"
         },
         "report_install_progress": {
             "source": "/common/report_install_progress.sh",
-            "path": "/opt/wormhole/installer/report_install_progress.sh"
+            "path": "${WH_PATH}/installer/report_install_progress.sh"
         },
         "benchmark": {
             "source": "/rpi/benchmark.sh",
-            "path": "/opt/wormhole/installer/benchmark.sh"
+            "path": "${WH_PATH}/installer/benchmark.sh"
         },
         "initial_update": {
             "source": "/rpi/initial_update.sh",
-            "path": "/opt/wormhole/installer/initial_update.sh"
+            "path": "${WH_PATH}/installer/initial_update.sh"
         },
         "ufw_config": {
             "source": "/rpi/ufw_config.sh",
-            "path": "/opt/wormhole/installer/ufw_config.sh"
+            "path": "${WH_PATH}/installer/ufw_config.sh"
         },
         "git_install": {
             "source": "/rpi/git_install.sh",
-            "path": "/opt/wormhole/installer/git_install.sh"
+            "path": "${WH_PATH}/installer/git_install.sh"
         },
         "git_clone_repo": {
             "source": "/rpi/git_clone_repo.sh",
-            "path": "/opt/wormhole/installer/git_clone_repo.sh"
+            "path": "${WH_PATH}/installer/git_clone_repo.sh"
         },
         "set_boot_order": {
             "source": "/rpi/set_boot_order.sh",
-            "path": "/opt/wormhole/installer/set_boot_order.sh"
+            "path": "${WH_PATH}/installer/set_boot_order.sh"
         },
         "migration": {
             "source": "/rpi/migration.sh",
-            "path": "/opt/wormhole/installer/migration.sh"
+            "path": "${WH_PATH}/installer/migration.sh"
         },
         "mc_set_theme": {
             "source": "/rpi/mc_set_theme.sh",
-            "path": "/opt/wormhole/installer/mc_set_theme.sh"
+            "path": "${WH_PATH}/installer/mc_set_theme.sh"
         }
     }
 }

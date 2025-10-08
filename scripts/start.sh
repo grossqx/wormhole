@@ -26,6 +26,10 @@ endpoint_report_install="/wh/install_log_write"
 endpoint_read_install="/wh/install_log_read"
 
 # Files and directories
+distro_dir="/opt/wormhole"
+library_dir="/etc/profile.d"
+systemd_service_dir="/etc/systemd/system"
+installer_dir="${distro_dir}/installer"
 persistent_data_dir="$HOME/.config/wormhole"
 config_memos_dir="$HOME/wormhole"
 checkpoint_file="${persistent_data_dir}/.checkpoint"
@@ -589,6 +593,10 @@ export endpoint_report_install
 export install_id
 export install_user
 export install_user_ip
+export distro_dir
+export library_dir
+export systemd_service_dir
+export installer_dir
 
 ## ============================================================
 ## Checklist

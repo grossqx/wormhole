@@ -55,6 +55,7 @@ required_vars=(
     "WH_IP_ADDR"
     "WH_DOMAIN"
     "WH_WIREGUARD_PORT"
+    "WH_PATH"
     "WH_HOME"
     "WH_LOG_FILE"
 )

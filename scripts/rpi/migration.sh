@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the path to the rpi-clone git repository
-rpiclone_repo="/opt/wormhole/repos/rpi-clone" 
+rpiclone_repo="${WH_PATH}/repos/rpi-clone" 
 total_steps=4
 
 echo "[1/${total_steps}] Starting migration script"

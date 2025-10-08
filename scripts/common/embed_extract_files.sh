@@ -150,17 +150,18 @@ function extract_embedded_file_simple() {
         echo "Error: Start line for ${name} not found in $0"
         return 1
     fi
-    local file_path=$(sed -n "${start_line}s/^___START_FILE_CONTENT___${name}___\(.*\)___$/\1/p" "$0")
-    if [[ -z "$file_path" ]]; then
+    local file_path_literal=$(sed -n "${start_line}s/^___START_FILE_CONTENT___${name}___\(.*\)___$/\1/p" "$0")
+    if [[ -z "$file_path_literal" ]]; then
         echo "Error: Extract file for ${name} path not found in $0"
         return 1
     fi
+    local file_path=$(eval echo "$file_path_literal")
     local end_line=$(awk "NR > $start_line && /^EOF$/ {print NR; exit}" "$0")
     if [[ -z "$end_line" ]]; then
         echo "Error: EOF for ${name} not found in $0"
         return 1
     fi
-    mkdir -p $(dirname "$file_path")
+    mkdir -p "$(dirname "$file_path")"
     sed -n "$(($start_line + 1)),$(($end_line - 1))p" "$0" > "$file_path"
     chmod +x "${file_path}"
     echo "Extracted ${name} to ${file_path}"
@@ -213,15 +214,16 @@ function extract_file() {
         echo "Error: Source script '$source_script' not found." >&2
         return 1
     fi
-    local file_path
+    local file_path_literal
     if [[ -n "$output_path" ]]; then
-        file_path="$output_path"
+        file_path_literal="$output_path"
     else
-        file_path=$(get_file_unpack_path "$source_script" "$name")
+        file_path_literal=$(get_file_unpack_path "$source_script" "$name")
         if [[ $? -ne 0 ]]; then
             return 1
         fi
     fi
+    local file_path=$(eval echo "$file_path_literal")
     local start_line=$(grep -m 1 -n "^___START_FILE_CONTENT___${name}___" "$source_script" | cut -d: -f1)
     if [[ -z "$start_line" ]]; then
         echo "Error: Start marker for '${name}' not found in '${source_script}'." >&2
@@ -292,7 +294,8 @@ function extract_systemd_service() {
         rm -f "$temp_file"
         return 1
     fi
-    sed -i "s|${exec_start_path_template}|${exec_start_script_path}|g" "$temp_file"
+    local exec_start_script=$(eval echo "$exec_start_script_path")
+    sed -i "s|${exec_start_path_template}|${exec_start_script}|g" "$temp_file"
     sudo cp "$temp_file" "$systemd_service_path"
     if [[ $? -ne 0 ]]; then
         echo "Error: Failed to copy file with sudo." >&2

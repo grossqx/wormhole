@@ -2,11 +2,6 @@
 
 set -e
 
-distro_dir="/opt/wormhole"
-installer_dir="${distro_dir}/installer"
-library_dir="/etc/profile.d"
-systemd_service_dir="/etc/systemd/system"
-
 if [ "$#" -ne 4 ]; then
     echo "Usage: $0 <config_file_path> <template_script> <output_script> <crypto key>"
     exit 1
@@ -54,6 +49,7 @@ sed -i "s|WH_CRYPTO_KEY=\"\"|WH_CRYPTO_KEY=\"${CRYPTO_KEY}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_IP_ADDR=\"\"|WH_IP_ADDR=\"${RPI_IP_ADDR}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_DOMAIN=\"\"|WH_DOMAIN=\"${RPI_DOMAIN}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_WIREGUARD_PORT=\"\"|WH_WIREGUARD_PORT=\"${RPI_WH_PORT}\"|g" "$OUTPUT_FILE"
+sed -i "s|WH_PATH=\"\"|WH_PATH=\"${distro_dir}\"|g" "$OUTPUT_FILE"
 
 # Pack scripts into firstrun.sh
 source ${base_dir}/common/embed_extract_files.sh
