@@ -1,0 +1,12 @@
+core:
+  restore_state: false
+  import_existing: false
+  admin_user: admin@wgportal.local
+  admin_password: wgportal
+  admin_api_token: ""
+advanced:
+  config_storage_path: /etc/wireguard/
+  start_listen_port: 51820
+  start_cidr_v4: "10.50.50.1/32"
+web:
+  external_url: http://192.168.0.11:8888
