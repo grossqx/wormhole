@@ -122,6 +122,7 @@ case $command in
             sudo -E ${base_dir}/docker_manage.sh $@
         else
             echo "docker what?"
+            echo "Usage: $0 <update update-env stack>"
             exit 0
         fi
         ;;
@@ -130,6 +131,7 @@ case $command in
         ;;
     *)
         echo "Unknown command $command"
+        show_help
         exit 1
         ;;
 esac
