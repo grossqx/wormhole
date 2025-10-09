@@ -177,9 +177,9 @@ extract_file "read_install_progress" 2>&1 | log
 ls "${installer_dir}" 2>&1 | log
 
 echo "[4/17] Extracting wormhole libraries..." | log
-extract_file "get_rpi_sysinfo" 2>&1 | log
+extract_file "rpi_sysinfo" 2>&1 | log
 extract_file "wh_logger" 2>&1 | log
-get_rpi_sysinfo_script=$(get_file_unpack_path "$0" "get_rpi_sysinfo" 2> >(log))
+rpi_sysinfo_script=$(get_file_unpack_path "$0" "rpi_sysinfo" 2> >(log))
 
 echo "[5/17] Extracting embedded services" | log
 
@@ -339,9 +339,9 @@ echo "Wifi SSID set to ${WIFI_SSID}. Password set to <hidden>" | log
 ## [WH] Get baseline system info
 ## ===============================================================================================================
 echo "Starting system information" | log
-source "$get_rpi_sysinfo_script"
-get_rpi_sysinfo | while read -r line; do
-    echo "[rpi_sysinfo] $line" | log
+source "$rpi_sysinfo_script"
+rpi-sysinfo | while read -r line; do
+    echo "[rpi-sysinfo] $line" | log
 done
 ## ===============================================================================================================
 

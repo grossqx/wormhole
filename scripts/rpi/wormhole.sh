@@ -22,7 +22,7 @@ binary_name="wormhole"
 # Files to be sourced
 dependencies=(
     "/etc/environment"
-    "/etc/profile.d/get_rpi_sysinfo.sh"
+    "/etc/profile.d/rpi_sysinfo.sh"
     "/etc/profile.d/wh_logger.sh"
 )
 
@@ -45,7 +45,7 @@ required_vars=(
 
 # Required functions
 required_functions=(
-    "get_rpi_sysinfo"
+    "rpi-sysinfo"
     "wh_log_local"
     "wh_log_remote"
     "wh_log"

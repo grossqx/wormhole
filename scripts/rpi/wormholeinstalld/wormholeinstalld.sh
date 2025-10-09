@@ -15,7 +15,7 @@ third_party_scripts=(
 
 dependencies=(
     "/etc/environment"
-    "/etc/profile.d/get_rpi_sysinfo.sh"
+    "/etc/profile.d/rpi_sysinfo.sh"
     "/etc/profile.d/wh_logger.sh"
 )
 
@@ -36,7 +36,7 @@ required_vars=(
 )
 
 required_functions=(
-    "get_rpi_sysinfo"
+    "rpi-sysinfo"
     "wh_send_payload"
 )
 
@@ -343,8 +343,8 @@ else
     echo "$message" | log
 fi
 
-get_rpi_sysinfo | while read -r line; do
-    echo "[rpi_sysinfo] $line" | log
+rpi-sysinfo | while read -r line; do
+    echo "[rpi-sysinfo] $line" | log
 done
 
 # Init preflight check status

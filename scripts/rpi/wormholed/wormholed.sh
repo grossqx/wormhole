@@ -39,7 +39,7 @@ function sdreport_success() {
 # Files to be sourced
 dependencies=(
     "/etc/environment"
-    "/etc/profile.d/get_rpi_sysinfo.sh"
+    "/etc/profile.d/rpi_sysinfo.sh"
     "/etc/profile.d/wh_logger.sh"
 )
 
@@ -62,7 +62,7 @@ required_vars=(
 
 # Required functions
 required_functions=(
-    "get_rpi_sysinfo"
+    "rpi-sysinfo"
     "wh_log_local"
     "wh_log_remote"
     "wh_log"
@@ -106,7 +106,7 @@ fi
 # Main loop
 while true; do
     # Send telemetry to the server
-    wh_send_payload "$(get_rpi_sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
+    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
     sleep $report_interval
 done
 

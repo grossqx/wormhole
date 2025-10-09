@@ -4,7 +4,7 @@
 # SCRIPT: Raspberry Pi System Information Function
 #
 # DESCRIPTION:
-# This script defines a shell function named `get_rpi_sysinfo` that collects
+# This script defines a shell function named `rpi-sysinfo` that collects
 # various system and hardware metrics from a Raspberry Pi, including hardware
 # details, temperature readings, bootloader status, and Docker information.
 #
@@ -19,10 +19,10 @@
 # To use this function, place this script in `/etc/profile.d/`.
 #
 # To get a human-readable output:
-#   get_rpi_sysinfo
+#   rpi-sysinfo
 #
 # To get a JSON output:
-#   get_rpi_sysinfo --json
+#   rpi-sysinfo --json
 #
 # DEPENDENCIES:
 # - vcgencmd: Standard Raspberry Pi command-line utility.
@@ -50,7 +50,7 @@
 #
 #####################################################################################
 
-get_rpi_sysinfo() {
+rpi-sysinfo() {
     # Determine if JSON output is requested
     local json_output=false
     if [[ "$1" == "--json" ]]; then

@@ -16,9 +16,9 @@
             "source": "/rpi/wormholeinstalld/wormholeinstalld.service",
             "path": "/etc/systemd/system/wormholeinstalld.service"
         },
-        "get_rpi_sysinfo": {
-            "source": "/rpi/lib/get_rpi_sysinfo.sh",
-            "path": "/etc/profile.d/get_rpi_sysinfo.sh"
+        "rpi_sysinfo": {
+            "source": "/rpi/lib/rpi_sysinfo.sh",
+            "path": "/etc/profile.d/rpi_sysinfo.sh"
         },
         "wh_logger": {
             "source": "/rpi/lib/wh_logger.sh",
