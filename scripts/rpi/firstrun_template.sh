@@ -83,6 +83,8 @@ WH_IP_ADDR=""
 WH_DOMAIN=""
 WH_WIREGUARD_PORT=""
 WH_PATH=""
+WH_BOOT_DEVICE=""
+WH_BOOT_DEVICE2=""
 
 ## ===============================================================================================================
 ## [WH] Constant variables
@@ -152,6 +154,8 @@ WH_WIREGUARD_PORT="${WH_WIREGUARD_PORT}"
 WH_PATH="${WH_PATH}"
 WH_HOME="${wormhole_home_path}"
 WH_LOG_FILE="${wormhole_log_path}"
+WH_BOOT_DEVICE="${WH_BOOT_DEVICE}
+WH_BOOT_DEVICE2="${WH_BOOT_DEVICE2}
 # --------------------------
 EOF
 ## ===============================================================================================================
@@ -204,6 +208,7 @@ systemctl enable "${service_file_name}" | log
 echo "[6/17] Extracting wormhole main scripts..." | log
 extract_file "wormhole" 2>&1 | log
 extract_file "update" 2>&1 | log
+extract_file "config_update" 2>&1 | log
 
 echo "[7/17] Creating a symlink at ${symlink_path}." | log
 main_binary_file=$(get_file_unpack_path "$0" "wormhole" 2> >(log))

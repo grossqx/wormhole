@@ -50,6 +50,8 @@ sed -i "s|WH_IP_ADDR=\"\"|WH_IP_ADDR=\"${RPI_IP_ADDR}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_DOMAIN=\"\"|WH_DOMAIN=\"${RPI_DOMAIN}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_WIREGUARD_PORT=\"\"|WH_WIREGUARD_PORT=\"${RPI_WH_PORT}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_PATH=\"\"|WH_PATH=\"${distro_dir}\"|g" "$OUTPUT_FILE"
+sed -i "s|WH_BOOT_DEVICE=\"\"|WH_BOOT_DEVICE=\"${RPI_BOOT_DEVICE}\"|g" "$OUTPUT_FILE"
+sed -i "s|WH_BOOT_DEVICE2=\"\"|WH_BOOT_DEVICE2=\"${RPI_BOOT_DEVICE2}\"|g" "$OUTPUT_FILE"
 
 # Pack scripts into firstrun.sh
 source ${base_dir}/common/embed_extract_files.sh

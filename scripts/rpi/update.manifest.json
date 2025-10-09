@@ -2,7 +2,7 @@
     "files": {
         "wormholed": {
             "source": "/rpi/wormholed/wormholed.sh",
-            "path": "${WH_PATH}/installer/wormholed.sh"
+            "path": "${WH_PATH}/wormholed.sh"
         },
         "wormholed-service": {
             "source": "/rpi/wormholed/wormholed.service",
@@ -27,6 +27,10 @@
         "wormhole": {
             "source": "/rpi/wormhole.sh",
             "path": "${WH_PATH}/wormhole.sh"
+        },
+        "config_update": {
+            "source": "/rpi/config_update.sh",
+            "path": "${WH_PATH}/config_update.sh"
         },
         "update": {
             "source": "/rpi/update.sh",

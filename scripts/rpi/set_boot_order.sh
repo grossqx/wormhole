@@ -6,7 +6,7 @@
 
 BOOT_ORDER_SD="0xf41"   # SD first (1), then USB (4). This is the default.
 BOOT_ORDER_USB="0xf14"  # USB first (4), then SD (1).
-BOOT_ORDER_NVME="0xf46" # NVMe first (6), then USB (4).
+BOOT_ORDER_NVME="0xf146" # NVMe first (6), then USB (4), then SD (1).
 
 function usage() {
     echo "Usage: sudo $0 <option>"
@@ -36,7 +36,7 @@ function check_boot_order_explicitly_set() {
     fi
 }
 
-function get_current_boot_order() {
+function set_target_to_current() {
     local boot_device_info
     boot_device_info=$(mount | grep " / " | awk '{print $1}')
     if [[ $boot_device_info == *"/dev/mmcblk"* ]]; then
@@ -54,7 +54,7 @@ function get_current_boot_order() {
     fi
 }
 
-function get_current_eeprom_config() {
+function read_eeprom_config() {
     CURRENT_CONFIG=$(rpi-eeprom-config 2>/dev/null)
     if [ $? -ne 0 ]; then
         echo "Error: Failed to read current EEPROM configuration with 'rpi-eeprom-config'." >&2
@@ -122,7 +122,7 @@ case "$1" in
         echo "Requested: NVMe priority ($TARGET_ORDER)."
         ;;
     -current)
-        get_current_boot_order
+        set_target_to_current
         ;;
     *)
         echo "Error: Invalid option '$1'." >&2
@@ -130,7 +130,7 @@ case "$1" in
         ;;
 esac
 
-get_current_eeprom_config
+read_eeprom_config
 
 TEMP_CONF=$(mktemp)
 trap "rm -f $TEMP_CONF" EXIT INT TERM

@@ -151,10 +151,12 @@ description=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."descriptio
 device_tag=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."device-tag"')
 search=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."search"')
 safety_timeout=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."safety-timeout"')
-timezone=$(echo "$json_data" | jq -r --arg key "$config" '.[$key].timezone')
-ip_addr=$(echo "$json_data" | jq -r --arg key "$config" '.[$key].ip_addr')
-domain=$(echo "$json_data" | jq -r --arg key "$config" '.[$key].domain')
-wh_port=$(echo "$json_data" | jq -r --arg key "$config" '.[$key].wh_port')
+timezone=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."timezone"')
+ip_addr=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."ip-addr"')
+domain=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."domain"')
+wh_port=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."wh-port"')
+boot_device=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."boot-device"')
+boot_device2=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."boot-device2"')
 
 # Handle Wifi Configuration
 wifi_data=$(echo "$json_data" | jq -r --arg key "$config" '.[$key].wifi')
@@ -225,7 +227,6 @@ fi
 
 send_report "Saving configuration to file"
 
-# Save configuration to temp
 rm -f ${CONFIG_PATH}
 echo "RPI_CONFIG_NAME='${config}'" >> ${CONFIG_PATH}
 echo "RPI_HOSTNAME='${hostname}'" >> ${CONFIG_PATH}
@@ -238,6 +239,8 @@ echo "RPI_IP_ADDR='${ip_addr}'" >> ${CONFIG_PATH}
 echo "RPI_DOMAIN='${domain}'" >> ${CONFIG_PATH}
 echo "RPI_WH_PORT='${wh_port}'" >> ${CONFIG_PATH}
 echo "RPI_HARDWARE_API_KEY=$(openssl rand -hex 16)" >> ${CONFIG_PATH}
+echo "RPI_BOOT_DEVICE='${boot_device}'" >> ${CONFIG_PATH}
+echo "RPI_BOOT_DEVICE2='${boot_device2}'" >> ${CONFIG_PATH}
 # WiFi
 echo "RPI_WIFI_ENCRYPTED='${wifi_encrypted}'" >> ${CONFIG_PATH}
 echo "RPI_WIFI_SSID='${wifi_ssid}'" >> ${CONFIG_PATH}

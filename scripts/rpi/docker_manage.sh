@@ -3,6 +3,7 @@
 STACKS_DIR="${docker_configs}/stacks"
 PREFIX="[docker manage] "
 supported_compose_commands="up down pull create ps logs ls stats start stop restart kill"
+supported_config_commands="services images networks volumes"
 
 # Check if required paths are set
 if [ -z "$docker_configs" ]; then
@@ -12,7 +13,7 @@ fi
 
 # Check if at least one argument is provided
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 <${supported_compose_commands}> [stack1] [stack2]..."
+  echo "Usage: $0 <${supported_compose_commands} ${supported_config_commands}> [stack1] [stack2]..."
   echo "  - The action to perform on the stacks."
   echo "  - Optional list of specific stack directories to process."
   echo "  - Commands 'up' and 'start' will be called in detached mode."
@@ -41,7 +42,9 @@ manage_stack() {
     return
   fi
   echo "${PREFIX}Performing 'docker compose ${action}' for stack $stack_name"
-  if echo "$supported_compose_commands" | grep -w -q "$action"; then
+  if echo "$supported_config_commands" | grep -w -q "$action"; then
+      sudo docker compose -f "$compose_file" config --"$action"
+  elif echo "$supported_compose_commands" | grep -w -q "$action"; then
     if [[ $action == "up" || $action == "start" ]]; then
       sudo docker compose -f "$compose_file" "$action" -d
     else

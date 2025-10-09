@@ -78,7 +78,8 @@ wormholeinstalld_exec_path=$(jq -r ".files.wormholeinstalld.path" "$manifest")
 echo "Extracting files..."
 for file_id in $(jq -r '.files | keys | .[]' "$manifest"); do
     source=$(jq -r ".files.\"$file_id\".source" "$manifest")
-    path=$(jq -r ".files.\"$file_id\".path" "$manifest")
+    path_literal=$(jq -r ".files.\"$file_id\".path" "$manifest")
+    path=$(eval echo "$path_literal")
     echo "- ${source} to ${path}..."
     # Replace teplate to the service file paths
     if [[ $file_id == "wormholed-service" ]]; then

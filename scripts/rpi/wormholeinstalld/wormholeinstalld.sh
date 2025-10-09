@@ -88,7 +88,7 @@ function log() {
                 sleep "$sleep_time_sec"
             fi
         fi
-        "${install_log_script}" "${install_log_endpoint}" "${WH_INSTALL_ID}" "${message}"
+        ${WH_PATH}/installer/report_install_progress.sh "${install_log_endpoint}" "${WH_INSTALL_ID}" "${message}"
         echo "$current_time" > "$last_log_time_file"
     fi
 }
@@ -262,6 +262,7 @@ systemd_service_dir="/etc/systemd/system"
 last_log_time_file="/tmp/wormhole_last_log_time.tmp"
 min_time_between_logs_ms=200
 number_of_stages=6
+wh_prefix="WH"
 stage_reboot_wait=10 # seconds
 error_reboot_time=5 # minutes
 marker_fin="___ FINISHED ___"
@@ -271,19 +272,12 @@ marker_close="___"
 
 # Other variables
 install_log_path="${WH_HOME}/wormhole_install.log"
-installer_dir="${WH_PATH}/installer"
-repository_dir="${WH_PATH}/repos"
-main_script="${WH_PATH}/wormhole.sh"
 third_party_scripts_dir="${WH_PATH}/third_party"
 get_pollrate_endpoint="${WH_SERVER_API_URL}/wh/get_pollrate_rpi"
 install_log_endpoint="${WH_SERVER_API_URL}/wh/install_log_write"
 check_config_endpoint="${WH_SERVER_API_URL}/wh/rpi.check_config"
-install_log_script="${installer_dir}/report_install_progress.sh"
-systemd_service_filename="${installer_name}.service"
-systemd_service_path="${systemd_service_dir}/${systemd_service_filename}"
 checkpoint_boot="${WH_HOME}/.checkpoint-boot"
 checkpoint_stage="${WH_HOME}/.checkpoint-stage"
-wh_prefix="WH"
 firstrun_log_path="/boot/firstrun.log"
 firstrun_backup="/home/firstrun_backup.sh"
 
@@ -342,6 +336,8 @@ if [ $boot_number -eq 2 ]; then
     echo "5....." | log
     echo "Hello ${WH_INSTALL_USER}!" | log
     echo "This is ${installer_name} from your $(hostname)" | log
+    echo "Raspberry Pi will reboot multiple times during installation. Setting boot priority to the current boot media." | log
+    ${WH_PATH}/installer/set_boot_order.sh -current | log
 else
     log_progress_state "Starting up"
     echo "$message" | log
@@ -422,7 +418,7 @@ case $install_stage in
         declare -i total_packages=0
         declare -i total_tasks=0
         declare -i current_task=0
-        ${installer_dir}/initial_update.sh | while read -r line; do
+        ${WH_PATH}/installer/initial_update.sh | while read -r line; do
             echo "$line" | log
             if [[ $total_packages -eq 0 ]]; then # Get the total number of packages and calculate total tasks.
                 if echo "$line" | grep -qP '\d+ upgraded, \d+ newly installed, \d+ to remove'; then
@@ -453,7 +449,7 @@ case $install_stage in
         stage_progress=0.0
         stage_max_progress=4.0
         log_progress_state "Stage ${install_stage} / Installing git"
-        ${installer_dir}/git_install.sh --lfs | while read -r line; do
+        ${WH_PATH}/installer/git_install.sh --lfs | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
@@ -462,7 +458,7 @@ case $install_stage in
             fi
         done
         log_progress_state "Stage ${install_stage} / Installing docker"
-        ${installer_dir}/docker_install.sh | while read -r line; do
+        ${WH_PATH}/installer/docker_install.sh | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
@@ -517,9 +513,9 @@ case $install_stage in
         log_progress_state "Stage ${install_stage} / Cloning git repositories"
         for repo_url in "${repositories_to_clone[@]}"; do
             repo_name=$(basename ${repo_url} | sed 's/\.git$//')
-            repo_desination="${repository_dir}/${repo_name}"
+            repo_desination="${WH_PATH}/repos/${repo_name}"
             echo "[${wh_prefix}] Cloning ${repo_name} into ${repo_desination}" | log
-            ${installer_dir}/git_clone_repo.sh "${repo_url}" "${repo_desination}" | while read -r line; do
+            ${WH_PATH}/installer/git_clone_repo.sh "${repo_url}" "${repo_desination}" | while read -r line; do
                 echo "$line" | log
             done
             current_task=$((current_task + 1))
@@ -544,16 +540,16 @@ case $install_stage in
     4)
         stage_progress=0.0
         stage_max_progress=3.0
-        ${main_script} --version | log
+        ${WH_PATH}/wormhole.sh --version | log
         log_progress_state "Stage ${install_stage} / Updating docker configs"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${main_script} docker update 2>&1 | while read -r line; do
+        ${WH_PATH}/wormhole.sh docker update 2>&1 | while read -r line; do
             echo "$line" | log
         done
         stage_progress=1.0
         log_progress_state "Stage ${install_stage} / Pulling docker images"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${main_script} docker stack pull 2>&1 | while read -r line; do
+        ${WH_PATH}/wormhole.sh docker stack pull 2>&1 | while read -r line; do
             if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting"; then
                 echo "$line" | log
             fi
@@ -561,7 +557,7 @@ case $install_stage in
         stage_progress=2.0
         log_progress_state "Stage ${install_stage} / Starting up docker stacks"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${main_script} docker stack up 2>&1 | while read -r line; do
+        ${WH_PATH}/wormhole.sh docker stack up 2>&1 | while read -r line; do
             echo "$line" | log
         done
         move_on_to_stage "5"
@@ -570,7 +566,7 @@ case $install_stage in
         stage_progress=0.0
         stage_max_progress=4.0
         log_progress_state "Stage ${install_stage} / Checking filesystem"
-        ${installer_dir}/migration.sh | while read -r line; do
+        ${WH_PATH}/installer/migration.sh | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
@@ -585,8 +581,8 @@ case $install_stage in
         sdreport "Intallation finished. Performing final steps"
         echo "Intallation finished. Performing final steps" | log
         log_progress_percent "$(get_install_progress "1" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        echo "Disabling ${systemd_service_filename} and removing checkpoint files" | log
-        systemctl disable "${systemd_service_filename}" | log
+        echo "Disabling ${installer_name} and removing checkpoint files" | log
+        systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log
         rm -f "${checkpoint_stage}" | log 
         log_progress_percent "$(get_install_progress "2" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
