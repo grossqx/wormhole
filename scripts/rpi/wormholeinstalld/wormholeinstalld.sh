@@ -17,6 +17,7 @@ dependencies=(
     "/etc/environment"
     "/etc/profile.d/rpi_sysinfo.sh"
     "/etc/profile.d/wh_logger.sh"
+    "/etc/profile.d/wh_storage.sh"
 )
 
 required_vars=(
@@ -33,6 +34,8 @@ required_vars=(
     "WH_PATH"
     "WH_HOME"
     "WH_LOG_FILE"
+    "WH_BOOT_DEVICE"
+    "WH_BOOT_DEVICE2"
 )
 
 required_functions=(
@@ -337,7 +340,7 @@ if [ $boot_number -eq 2 ]; then
     echo "Hello ${WH_INSTALL_USER}!" | log
     echo "This is ${installer_name} from your $(hostname)" | log
     echo "Raspberry Pi will reboot multiple times during installation. Setting boot priority to the current boot media." | log
-    ${WH_PATH}/installer/set_boot_order.sh -current | log
+    ${WH_PATH}/set_boot_order.sh -current | log
 else
     log_progress_state "Starting up"
     echo "$message" | log
@@ -566,7 +569,7 @@ case $install_stage in
         stage_progress=0.0
         stage_max_progress=4.0
         log_progress_state "Stage ${install_stage} / Checking filesystem"
-        ${WH_PATH}/installer/migration.sh | while read -r line; do
+        ${WH_PATH}/migration.sh | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
@@ -581,6 +584,7 @@ case $install_stage in
         sdreport "Intallation finished. Performing final steps"
         echo "Intallation finished. Performing final steps" | log
         log_progress_percent "$(get_install_progress "1" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+        ${WH_PATH}/benchmark.sh | log
         echo "Disabling ${installer_name} and removing checkpoint files" | log
         systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log

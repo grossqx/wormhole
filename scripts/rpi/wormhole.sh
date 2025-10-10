@@ -24,6 +24,7 @@ dependencies=(
     "/etc/environment"
     "/etc/profile.d/rpi_sysinfo.sh"
     "/etc/profile.d/wh_logger.sh"
+    "/etc/profile.d/wh_storage.sh"
 )
 
 # Required environment variables
@@ -41,6 +42,8 @@ required_vars=(
     "WH_PATH"
     "WH_HOME"
     "WH_LOG_FILE"
+    "WH_BOOT_DEVICE"
+    "WH_BOOT_DEVICE2"
 )
 
 # Required functions

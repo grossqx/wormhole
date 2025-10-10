@@ -1181,7 +1181,7 @@ if (( CHECKPOINT < 14)); then
     marker_progress="___ PROGRESS ___"
     marker_state="___ STATE ___"
     marker_close="___"
-    progress_bar_length=65
+    progress_bar_length=80
     # Init new log file
     echo "#########################################################################" > "${install_log_file}"
     echo "##                              INSTALL LOG" >> "${install_log_file}"

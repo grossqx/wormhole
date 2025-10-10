@@ -1,6 +1,7 @@
 #!/bin/bash
 
 report_interval=60
+migration_order="${WH_HOME}/migration_order.sh"
 
 # Service management and systemd reports
 function sdreport(){
@@ -41,6 +42,7 @@ dependencies=(
     "/etc/environment"
     "/etc/profile.d/rpi_sysinfo.sh"
     "/etc/profile.d/wh_logger.sh"
+    "/etc/profile.d/wh_storage.sh"
 )
 
 # Required environment variables
@@ -58,6 +60,8 @@ required_vars=(
     "WH_PATH"
     "WH_HOME"
     "WH_LOG_FILE"
+    "WH_BOOT_DEVICE"
+    "WH_BOOT_DEVICE2"
 )
 
 # Required functions
@@ -66,6 +70,7 @@ required_functions=(
     "wh_log_local"
     "wh_log_remote"
     "wh_log"
+    "wh-storage-resolve"
 )
 
 # Check requirements before initialization
@@ -99,8 +104,24 @@ if [[ $error_occurred == "true" ]]; then
     echo -e "Configuration check failed:\n$initialization_errors"
     sdreport_ready_failure "Core Wormhole library is missing" "2" #ERRNO 2 - Missing files or directiories
 else
-    echo -e "Start state indicates a successfull firstrun.sh exection"
     sdreport_ready "Started"
+fi
+
+if [ -f ${migration_order} ]; then
+    echo "Migration order discovered at ${migration_order}"
+fi
+# Check boot media
+if [ ! -z $WH_BOOT_DEVICE ]; then
+    resolved_device=$(wh-storage-resolve $WH_BOOT_DEVICE)
+    echo "Primary boot device set to ${WH_BOOT_DEVICE} - assigned ${resolved_device}"
+else
+    echo "Primary boot device not explicitly set"
+fi
+if [ ! -z $WH_BOOT_DEVICE2 ]; then
+    resolved_device2=$(wh-storage-resolve $WH_BOOT_DEVICE2)
+    echo "Secondary boot device set to ${WH_BOOT_DEVICE2} - assigned ${resolved_device2}"
+else
+    echo "Secondary boot device not explicitly set"
 fi
 
 # Main loop

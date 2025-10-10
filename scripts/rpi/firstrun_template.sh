@@ -154,8 +154,8 @@ WH_WIREGUARD_PORT="${WH_WIREGUARD_PORT}"
 WH_PATH="${WH_PATH}"
 WH_HOME="${wormhole_home_path}"
 WH_LOG_FILE="${wormhole_log_path}"
-WH_BOOT_DEVICE="${WH_BOOT_DEVICE}
-WH_BOOT_DEVICE2="${WH_BOOT_DEVICE2}
+WH_BOOT_DEVICE="${WH_BOOT_DEVICE}"
+WH_BOOT_DEVICE2="${WH_BOOT_DEVICE2}"
 # --------------------------
 EOF
 ## ===============================================================================================================
@@ -179,6 +179,7 @@ ls "${installer_dir}" 2>&1 | log
 echo "[4/17] Extracting wormhole libraries..." | log
 extract_file "rpi_sysinfo" 2>&1 | log
 extract_file "wh_logger" 2>&1 | log
+extract_file "wh_storage" 2>&1 | log
 rpi_sysinfo_script=$(get_file_unpack_path "$0" "rpi_sysinfo" 2> >(log))
 
 echo "[5/17] Extracting embedded services" | log

@@ -24,6 +24,10 @@
             "source": "/rpi/lib/wh_logger.sh",
             "path": "/etc/profile.d/wh_logger.sh"
         },
+        "wh_storage": {
+            "source": "/rpi/lib/wh_storage.sh",
+            "path": "/etc/profile.d/wh_storage.sh"
+        },
         "wormhole": {
             "source": "/rpi/wormhole.sh",
             "path": "${WH_PATH}/wormhole.sh"
@@ -52,6 +56,18 @@
             "source": "/rpi/docker_manage.sh",
             "path": "${WH_PATH}/docker_manage.sh"
         },
+        "migration": {
+            "source": "/rpi/migration.sh",
+            "path": "${WH_PATH}/migration.sh"
+        },
+        "benchmark": {
+            "source": "/rpi/benchmark.sh",
+            "path": "${WH_PATH}/benchmark.sh"
+        },
+        "set_boot_order": {
+            "source": "/rpi/set_boot_order.sh",
+            "path": "${WH_PATH}/set_boot_order.sh"
+        },
         "embed_extract_files": {
             "source": "/common/embed_extract_files.sh",
             "path": "${WH_PATH}/installer/embed_extract_files.sh"
@@ -63,10 +79,6 @@
         "report_install_progress": {
             "source": "/common/report_install_progress.sh",
             "path": "${WH_PATH}/installer/report_install_progress.sh"
-        },
-        "benchmark": {
-            "source": "/rpi/benchmark.sh",
-            "path": "${WH_PATH}/installer/benchmark.sh"
         },
         "initial_update": {
             "source": "/rpi/initial_update.sh",
@@ -83,14 +95,6 @@
         "git_clone_repo": {
             "source": "/rpi/git_clone_repo.sh",
             "path": "${WH_PATH}/installer/git_clone_repo.sh"
-        },
-        "set_boot_order": {
-            "source": "/rpi/set_boot_order.sh",
-            "path": "${WH_PATH}/installer/set_boot_order.sh"
-        },
-        "migration": {
-            "source": "/rpi/migration.sh",
-            "path": "${WH_PATH}/installer/migration.sh"
         },
         "mc_set_theme": {
             "source": "/rpi/mc_set_theme.sh",

@@ -9,12 +9,13 @@ BOOT_ORDER_USB="0xf14"  # USB first (4), then SD (1).
 BOOT_ORDER_NVME="0xf146" # NVMe first (6), then USB (4), then SD (1).
 
 function usage() {
-    echo "Usage: sudo $0 <option>"
+    echo "Usage: sudo $0 <option> [device_path]"
     echo "Options:"
     echo "  -current  : Detects the current boot device (SD/USB/NVMe) and sets the boot order to prioritize it."
     echo "  -sd       : Sets priority to the SD card (BOOT_ORDER=$BOOT_ORDER_SD - SD -> USB)."
     echo "  -usb      : Sets priority to the USB device (BOOT_ORDER=$BOOT_ORDER_USB - USB -> SD)."
     echo "  -nvme     : Sets priority to the NVMe device (BOOT_ORDER=$BOOT_ORDER_NVME - NVMe -> USB)."
+    echo "  -d, -device : Sets priority based on a specific block device path (e.g., /dev/sda, /dev/nvme0n1p1)."
     echo ""
     echo "The script requires sudo privileges to apply the changes."
     exit 1
@@ -36,20 +37,54 @@ function check_boot_order_explicitly_set() {
     fi
 }
 
+function get_boot_order_from_device_path() {
+    local device_path="$1"
+    local base_device
+    local DETECTED_ORDER=""
+    base_device="$device_path"
+    if [[ $device_path =~ ^/dev/nvme[0-9]+n[0-9]+p[0-9]+$ ]]; then
+        base_device=$(echo "$device_path" | sed -E 's/p[0-9]+$//')
+    elif [[ $device_path =~ ^/dev/sd[a-z][0-9]+$ ]]; then
+        base_device=$(echo "$device_path" | sed -E 's/[0-9]+$//')
+    elif [[ $device_path =~ ^/dev/mmcblk[0-9]p[0-9]+$ ]]; then
+        base_device=$(echo "$device_path" | sed -E 's/p[0-9]+$//')
+    fi
+    if [ ! -b "$base_device" ]; then
+        echo "Error: Block device '$base_device' (derived from '$device_path') does not exist or is not a block device." >&2
+        return 1
+    fi
+    if [[ $base_device == *"/dev/mmcblk"* ]]; then
+        echo "Identified '$device_path' as an SD Card device." >&2
+        DETECTED_ORDER=$BOOT_ORDER_SD
+    elif [[ $base_device == *"/dev/nvme"* ]]; then
+        echo "Identified '$device_path' as a native NVMe device. Prioritizing NVMe (code 6)." >&2
+        DETECTED_ORDER=$BOOT_ORDER_NVME
+    elif [[ $base_device == *"/dev/sd"* ]]; then
+        # This branch covers all USB-attached and SATA drives, which must use the USB Mass Storage Device (USB-MSD) code 4.
+        echo "Identified '$device_path' as a USB-attached or SATA device. Prioritizing USB-MSD (code 4)." >&2
+        DETECTED_ORDER=$BOOT_ORDER_USB
+    else
+        echo "Warning: Could not reliably identify device type for '$device_path'. Defaulting to SD Card priority." >&2
+        DETECTED_ORDER=$BOOT_ORDER_SD
+    fi
+    echo "Prioritizing device type with BOOT_ORDER=$DETECTED_ORDER." >&2
+    echo "$DETECTED_ORDER" # Final output, captured by command substitution
+    return 0
+}
+
 function set_target_to_current() {
     local boot_device_info
     boot_device_info=$(mount | grep " / " | awk '{print $1}')
-    if [[ $boot_device_info == *"/dev/mmcblk"* ]]; then
-        echo "Detected boot from SD Card. Prioritizing SD ($BOOT_ORDER_SD)."
+    if [ -z "$boot_device_info" ]; then
+        echo "Error: Could not determine the currently mounted root device." >&2
         TARGET_ORDER=$BOOT_ORDER_SD
-    elif [[ $boot_device_info == *"/dev/nvme"* || $(lsblk -o TRAN $boot_device_info 2>/dev/null) == *pci* ]]; then
-        echo "Detected boot from NVMe device. Prioritizing NVMe ($BOOT_ORDER_NVME)."
-        TARGET_ORDER=$BOOT_ORDER_NVME
-    elif [[ $boot_device_info == *"/dev/sd"* ]]; then
-        echo "Detected boot from USB/external device. Prioritizing USB ($BOOT_ORDER_USB)."
-        TARGET_ORDER=$BOOT_ORDER_USB
-    else
-        echo "Could not reliably determine boot device type. Defaulting to SD Card priority ($BOOT_ORDER_SD)."
+        echo "Defaulting to SD Card priority ($TARGET_ORDER)." >&2
+        return
+    fi
+    echo "Determining boot order based on current root device: $boot_device_info" >&2
+    TARGET_ORDER=$(get_boot_order_from_device_path "$boot_device_info")
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to reliably detect the current boot device type. Defaulting to SD Card priority ($BOOT_ORDER_SD)." >&2
         TARGET_ORDER=$BOOT_ORDER_SD
     fi
 }
@@ -123,6 +158,20 @@ case "$1" in
         ;;
     -current)
         set_target_to_current
+        ;;
+    -d|-device)
+        if [ -z "$2" ]; then
+            echo "Error: The '$1' option requires a device path argument (e.g., /dev/sda)." >&2
+            usage
+        fi
+        DEVICE_PATH="$2"
+        echo "Requested device path: $DEVICE_PATH."
+        DETERMINED_ORDER=$(get_boot_order_from_device_path "$DEVICE_PATH")
+        if [ $? -ne 0 ]; then
+             echo "Fatal Error: Cannot proceed because the device path could not be resolved." >&2
+             exit 1
+        fi
+        TARGET_ORDER="$DETERMINED_ORDER"
         ;;
     *)
         echo "Error: Invalid option '$1'." >&2
