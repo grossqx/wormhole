@@ -112,6 +112,10 @@ case $command in
         sudo -E ${base_dir}/update.sh
         exit 0
         ;;
+    migrate)
+        sudo -E ${base_dir}/migration.sh
+        exit 0
+        ;;
     docker)
         shift
         docker_command="$1"

@@ -18,12 +18,14 @@ function schedule_cloning(){
     local from="$1"
     local to="$2"
     echo "--- Cloning from ${from} to ${to} scheduled"
-    echo "$binary_dir/rpi-clone $to" >> $plan
+    echo "# Clone current drive to ${to}" >> $plan
+    echo "$binary_dir/rpi-clone $to -U" >> $plan
 }
 
 function schedule_boot_order_change(){
     local to="$1"
     echo "--- Boot order change to ${to} scheduled"
+    echo "# Set boot order to $to" >> $plan
     echo "${WH_PATH}/set_boot_order.sh -device $to" >> $plan
 }
 
@@ -124,6 +126,8 @@ fi
 
 echo "[5/${total_steps}] Making a migration plan"
 echo "#!/bin/bash" > $plan
+echo >> $plan
+echo "set -e" >> $plan
 if [[ $boot_current == "primary" ]]; then
     if [[ $boot_secondary_found -eq 1 ]]; then
         echo "Scheduling cloning from ${resolved_device} (primary) to ${resolved_device2} (secondary)"
@@ -133,7 +137,6 @@ if [[ $boot_current == "primary" ]]; then
             echo "Boot order already explicitly set"
         else
             echo "Boot order not explicitly set"
-            echo "Scheduling boot order change to prioritize ${WH_BOOT_DEVICE}"
             schedule_boot_order_change "${resolved_device}"
         fi
     fi
@@ -141,7 +144,6 @@ elif [[ $boot_current == "secondary" ]]; then
     if [[ $boot_primary_found -eq 1 ]]; then
         echo "Scheduling cloning from ${resolved_device2} (secondary) to ${resolved_device} (primary)"
         schedule_cloning "$resolved_device2" "$resolved_device"
-        echo "Scheduling boot order change to prioritize ${WH_BOOT_DEVICE}"
         schedule_boot_order_change "${resolved_device}"
     fi
 else
@@ -149,4 +151,11 @@ else
     exit 1
 fi
 
+echo "------ Migration plan: --------"
+cat $plan
+echo "-------------------------------"
+echo
+echo "Plan will be run by wormholed on next boot"
+echo "To cancel the migration: sudo rm $plan"
+echo
 echo "[6/${total_steps}] Migration script complete"

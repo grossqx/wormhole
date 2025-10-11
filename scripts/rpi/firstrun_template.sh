@@ -224,6 +224,7 @@ extract_file "docker_update_config" 2>&1 | log
 extract_file "docker_update_env" 2>&1 | log
 extract_file "docker_manage" 2>&1 | log
 extract_file "ufw_config" 2>&1 | log
+extract_file "nfs_config" 2>&1 | log
 extract_file "git_install" 2>&1 | log
 extract_file "git_clone_repo" 2>&1 | log
 extract_file "set_boot_order" 2>&1 | log

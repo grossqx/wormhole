@@ -11,14 +11,16 @@ NEW_VALUE="$2"
 display_usage() {
     echo -e "Usage: $0 <variable_name> <new_value>"
     echo "Available variable names:"
-    echo "  ip      -> WH_IP_ADDR (Valid IPv4, must match current system IP)"
-    echo "  crypto  -> WH_CRYPTO_KEY (Non-empty string)"
-    echo "  apikey  -> WH_HARDWARE_API_KEY (Non-empty alphanumeric/hex)"
-    echo "  url     -> WH_SERVER_API_URL (Valid HTTP/HTTPS URL)"
-    echo "  path    -> WH_PATH (Absolute path starting with /)"
-    echo "  home    -> WH_HOME (Path starting with /home/)"
-    echo "  domain  -> WH_DOMAIN (Valid HTTPS URL)"
-    echo "  wgport  -> WH_WIREGUARD_PORT (Port number 1-65535)"
+    echo "  ip             -> WH_IP_ADDR (Valid IPv4, must match current system IP)"
+    echo "  crypto         -> WH_CRYPTO_KEY (Non-empty string)"
+    echo "  apikey         -> WH_HARDWARE_API_KEY (Non-empty alphanumeric/hex)"
+    echo "  url            -> WH_SERVER_API_URL (Valid HTTP/HTTPS URL)"
+    echo "  path           -> WH_PATH (Absolute path starting with /)"
+    echo "  home           -> WH_HOME (Path starting with /home/)"
+    echo "  domain         -> WH_DOMAIN (Valid HTTPS URL)"
+    echo "  wgport         -> WH_WIREGUARD_PORT (Port number 1-65535)"
+    echo "  boot-primary   -> WH_BOOT_DEVICE ('USB', 'SDCARD', 'NVME', or /dev/path)"
+    echo "  boot-secondary -> WH_BOOT_DEVICE2"
     exit 1
 }
 
@@ -38,7 +40,7 @@ validate_ipv4() {
     fi
     my_ip=$(nmcli -t -f IP4.ADDRESS device show | head -1 | cut -d"/" -f1 | cut -d : -f2)
     if [ -z "$my_ip" ]; then
-        echo -e "Warning: Could not determine current system IP using 'nmcli'. Skipping IP match check."
+        echo -e "Warning: Could not determine current system IP. Skipping IP match check."
     elif [ "$1" != "$my_ip" ]; then
         echo -e "Validation Error: The new IP value ('$1') does not match the current actual system IP ('$my_ip')."
         return 1
@@ -111,6 +113,33 @@ validate_non_empty_simple() {
     return 0
 }
 
+validate_boot_device() {
+    local value="$1"
+    local accepted_values=("USB" "SDCARD" "NVME")
+    local is_accepted=0
+    for accepted in "${accepted_values[@]}"; do
+        if [[ "$value" == "$accepted" ]]; then
+            is_accepted=1
+            break
+        fi
+    done
+    if [ "$is_accepted" -eq 1 ]; then
+        echo "Info: Boot device '$value' is a recognized pre-set string."
+        return 0
+    fi
+    if [[ $value =~ ^/dev/[a-z]+[0-9]?$ ]]; then
+        if [ -b "$value" ]; then
+            echo "Info: Boot device '$value' is a valid, existing block device path."
+            return 0
+        else
+            echo -e "Validation Error: '$value' looks like a device path but does not correspond to an existing block device (e.g., /dev/sda)."
+            return 1
+        fi
+    fi
+    echo -e "Validation Error: '$value' must be a case-sensitive pre-set string (${accepted_values[*]}) or a path to a valid block device (e.g., /dev/sda)."
+    return 1
+}
+
 case "$INPUT_NAME" in
     ip)
         VARIABLE_KEY="WH_IP_ADDR"
@@ -144,13 +173,21 @@ case "$INPUT_NAME" in
         VARIABLE_KEY="WH_WIREGUARD_PORT"
         validate_port "$NEW_VALUE" || exit 1
         ;;
+    boot-primary)
+        VARIABLE_KEY="WH_BOOT_DEVICE"
+        validate_boot_device "$NEW_VALUE" || exit 1
+        ;;
+    boot-secondary)
+        VARIABLE_KEY="WH_BOOT_DEVICE2"
+        validate_boot_device "$NEW_VALUE" || exit 1
+        ;;
     *)
         echo -e "Error: Unknown variable name '$INPUT_NAME'."
         display_usage
         ;;
 esac
 
-# Check if the variable exists in the file
+OLD_VALUE=$(grep -oP "^${VARIABLE_KEY}=\"\K.*?(?=\")" "$ENV_FILE")
 if ! grep -q "^${VARIABLE_KEY}=\".*\"" "$ENV_FILE"; then
     echo -e "Error: The variable '$VARIABLE_KEY' was not found in '$ENV_FILE'."
     echo "Please ensure it is present in the format: ${VARIABLE_KEY}=\"old_value\""
@@ -160,7 +197,7 @@ fi
 echo -e "Updating $VARIABLE_KEY in $ENV_FILE to \"$NEW_VALUE\"..."
 sed -i.bak "s|^${VARIABLE_KEY}=\".*\"|${VARIABLE_KEY}=\"$NEW_VALUE\"|" "$ENV_FILE"
 if [ $? -eq 0 ]; then
-    echo -e "Success: $VARIABLE_KEY has been updated."
+    echo -e "Success: $VARIABLE_KEY has been updated from '$OLD_VALUE' to '$NEW_VALUE'."
     echo "A backup of the original file was created at ${ENV_FILE}.bak"
     source "$ENV_FILE"
 else

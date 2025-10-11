@@ -2,6 +2,7 @@
 
 report_interval=60
 migration_order="${WH_HOME}/migration_order.sh"
+install_service_name="wormholeinstalld"
 
 # Service management and systemd reports
 function sdreport(){
@@ -36,6 +37,27 @@ function sdreport_success() {
     exit 0
 }
 
+function main_loop(){
+    # Send telemetry to the server
+    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
+}
+
+function execute_migration_order(){
+    echo "Running the migration order ${migration_order}"
+    sdreport "Executing migration order"
+    ${migration_order} | while read -r line; do
+        echo "$line"
+        wh_log "$line" 
+    done
+    result=${PIPESTATUS[0]}
+    if [ $result -ne 0 ]; then
+        echo "Error: ${migration_order} failed with status $result."
+        sdreport "Migration order failed: status $result."
+    else
+        echo "Migration successfull."
+        sdreport "Migration order completed."
+    fi
+}
 
 # Files to be sourced
 dependencies=(
@@ -99,6 +121,7 @@ for func in "${required_functions[@]}"; do
         error_occurred=true
     fi
 done
+
 # Report on state
 if [[ $error_occurred == "true" ]]; then
     echo -e "Configuration check failed:\n$initialization_errors"
@@ -107,27 +130,40 @@ else
     sdreport_ready "Started"
 fi
 
-if [ -f ${migration_order} ]; then
-    echo "Migration order discovered at ${migration_order}"
-fi
 # Check boot media
-if [ ! -z $WH_BOOT_DEVICE ]; then
+current_boot_path=$(mount | grep " / " | awk '{print $1}')
+if [ -z $WH_BOOT_DEVICE ]; then
+    echo "Warning: Primary boot device not set"
+else
     resolved_device=$(wh-storage-resolve $WH_BOOT_DEVICE)
-    echo "Primary boot device set to ${WH_BOOT_DEVICE} - assigned ${resolved_device}"
-else
-    echo "Primary boot device not explicitly set"
+    if echo "$current_boot_path" | grep -q "$resolved_device"; then
+        echo "Currently booted from the Primary device: ${resolved_device}"
+    fi
 fi
-if [ ! -z $WH_BOOT_DEVICE2 ]; then
-    resolved_device2=$(wh-storage-resolve $WH_BOOT_DEVICE2)
-    echo "Secondary boot device set to ${WH_BOOT_DEVICE2} - assigned ${resolved_device2}"
+if [ -z $WH_BOOT_DEVICE2 ]; then
+    echo "Warning: Secondary boot device not set"
 else
-    echo "Secondary boot device not explicitly set"
+    resolved_device2=$(wh-storage-resolve $WH_BOOT_DEVICE2)
+    if echo "$current_boot_path" | grep -q "$resolved_device2"; then
+        echo "Currently booted from the Secondary device: ${resolved_device}"
+    fi
+fi
+
+# Check for migration orders and updates
+if [ -f ${migration_order} ]; then
+    echo "New migration order discovered"
+    if systemctl is-enabled --quiet ${install_service_name}.service; then
+        echo "${install_service_name} is still enabled. Delaying migration until installation is finished."
+        wh_log "$line"
+    else
+        main_loop # Run main loop at least once before the migration
+        execute_migration_order
+    fi
 fi
 
 # Main loop
 while true; do
-    # Send telemetry to the server
-    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
+    main_loop
     sleep $report_interval
 done
 

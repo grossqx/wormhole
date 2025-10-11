@@ -88,6 +88,10 @@
             "source": "/rpi/ufw_config.sh",
             "path": "${WH_PATH}/installer/ufw_config.sh"
         },
+        "nfs_config": {
+            "source": "/rpi/nfs_config.sh",
+            "path": "${WH_PATH}/installer/nfs_config.sh"
+        },
         "git_install": {
             "source": "/rpi/git_install.sh",
             "path": "${WH_PATH}/installer/git_install.sh"

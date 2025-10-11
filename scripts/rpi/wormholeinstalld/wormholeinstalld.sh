@@ -566,14 +566,31 @@ case $install_stage in
         move_on_to_stage "5"
         ;;
     5)
-        stage_progress=0.0
-        stage_max_progress=4.0
-        log_progress_state "Stage ${install_stage} / Checking filesystem"
+        stage_max_progress=3.0
+        log_progress_state "Stage ${install_stage} / Migration planning"
         ${WH_PATH}/migration.sh | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 3)
+                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
+                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+            fi
+        done
+        log_progress_state "Stage ${install_stage} / NFS configuration"
+        ${WH_PATH}/installer/nfs_config.sh | while read -r line; do
+            echo "$line" | log
+            script_progress=$(parse_progress "$line")
+            if [ $? -eq 0 ]; then
+                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 1 2)
+                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+            fi
+        done
+        log_progress_state "Stage ${install_stage} / UFW configuration"
+        ${WH_PATH}/installer/ufw_config.sh | while read -r line; do
+            echo "$line" | log
+            script_progress=$(parse_progress "$line")
+            if [ $? -eq 0 ]; then
+                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 2 3)
                 log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
             fi
         done
@@ -581,16 +598,28 @@ case $install_stage in
         ;;
     $number_of_stages)
         stage_max_progress=2.0
+        log_progress_state "Stage ${install_stage} / Running benchmarks"
+        ${WH_PATH}/benchmark.sh | while read -r line; do
+            echo $line | log
+            script_progress=$(parse_progress "$line")
+            if [ $? -eq 0 ]; then
+                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
+                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+            fi
+        done
+        log_progress_state "Stage ${install_stage} / Finalizing installation"
         sdreport "Intallation finished. Performing final steps"
         echo "Intallation finished. Performing final steps" | log
-        log_progress_percent "$(get_install_progress "1" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${WH_PATH}/benchmark.sh | log
         echo "Disabling ${installer_name} and removing checkpoint files" | log
         systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log
         rm -f "${checkpoint_stage}" | log 
         log_progress_percent "$(get_install_progress "2" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+        log_progress_state "Stage ${install_stage} / Rebooting"
+        echo "$(hostname) will reboot in 1 minute. If migration is planned, it will be executed on next boot." | log
+        # Finalize log for the client
         echo "$marker_fin" | log
+        shutdown -r +1
         sdreport_success "Finished"
         ;;
     *)
