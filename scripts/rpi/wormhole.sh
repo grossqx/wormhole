@@ -90,14 +90,21 @@ if [[ $error_occurred == "true" ]]; then
     exit 1
 fi
 
+if [[ $EUID -ne 0 ]]; then
+   echo "Error: This script must be run with sudo or as root."
+   exit 1
+fi
+
 docker_configs="${base_dir}/docker"
 docker_volumes="${WH_HOME}/docker_storage"
+backup_dir="${WH_HOME}/backups"
 
 export docker_configs
 export docker_volumes
 
 mkdir -p "${docker_configs}"
 mkdir -p "${docker_volumes}"
+mkdir -p "${backup_dir}"
 
 case $command in
     --version|-v|-V|--v|--V)
@@ -109,24 +116,29 @@ case $command in
         exit 0
         ;;
     update)
-        sudo -E ${base_dir}/update.sh
+        ${base_dir}/update.sh
         exit 0
         ;;
     migrate)
-        sudo -E ${base_dir}/migration.sh
+        ${base_dir}/migration.sh
         exit 0
         ;;
     docker)
         shift
         docker_command="$1"
         if [[ $docker_command == 'update' ]]; then
-            sudo -E ${base_dir}/docker_update_config.sh
-            sudo -E ${base_dir}/docker_update_env.sh
+            ${base_dir}/docker_update_config.sh
+            ${base_dir}/docker_update_env.sh
         elif [[ $docker_command == 'update-env' ]]; then
-            sudo -E ${base_dir}/docker_update_env.sh
+            ${base_dir}/docker_update_env.sh
         elif [[ $docker_command == 'stack' ]]; then
             shift
-            sudo -E ${base_dir}/docker_manage.sh $@
+            ${base_dir}/docker_manage.sh $@
+        elif [[ $docker_command == 'backup' ]]; then
+            for current_volume_path in "$docker_volumes"/*/; do
+                source_dir="${current_volume_path%/}"
+                [ -d "$source_dir" ] && wh-backup "$source_dir" "$backup_dir"
+            done
         else
             echo "docker what?"
             echo "Usage: $0 <update update-env stack>"

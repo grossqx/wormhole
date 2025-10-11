@@ -303,5 +303,5 @@ function extract_systemd_service() {
         return 1
     fi
     rm -f "$temp_file"
-    echo "systemd service file extracted from '${source_script}' to '${systemd_service_path}'"
+    echo "systemd service file extracted from '${source_script}' to '${systemd_service_path}' with exec '${exec_start_script}'"
 }

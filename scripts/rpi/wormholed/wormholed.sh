@@ -1,7 +1,6 @@
 #!/bin/bash
 
 report_interval=60
-migration_order="${WH_HOME}/migration_order.sh"
 install_service_name="wormholeinstalld"
 
 # Service management and systemd reports
@@ -121,6 +120,8 @@ for func in "${required_functions[@]}"; do
         error_occurred=true
     fi
 done
+
+migration_order="${WH_HOME}/migration_order.sh"
 
 # Report on state
 if [[ $error_occurred == "true" ]]; then

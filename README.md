@@ -131,15 +131,16 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 wormhole tool
 - backup and restore
-    - basic backup and restore functions at wh-storage (low-level - source dir - dest dir)
     - run backup or restore over docker stack or all stacks (like manage)
-    - sync backup folder to other hosts
+- sync backup folder to other hosts
 
 wormhole-installer:
 - fix incorrect network interface being picked when pi is on both eth and wifi
 - mc theme setter fix
 
 wormholeinstalld.sh:
+- fix percentage decimal
+- fix progress bar stages
 - restore docker volumes from backup
 - nfs server (userful.sh)
 - ufw
@@ -147,6 +148,8 @@ wormholeinstalld.sh:
 wormholed.sh
 - add wh_log throughout the main script
 - auto-updates
+    - system updates (nfs, ssh, etc.)
+    - wormhole updates
 
 - help
 
