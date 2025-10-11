@@ -577,7 +577,7 @@ case $install_stage in
             fi
         done
         log_progress_state "Stage ${install_stage} / NFS configuration"
-        ${WH_PATH}/installer/nfs_config.sh | while read -r line; do
+        ${WH_PATH}/installer/nfs_config.sh -i | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
