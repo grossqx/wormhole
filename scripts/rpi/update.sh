@@ -74,7 +74,8 @@ manifest="${new_distro_dir}/rpi/update.manifest.json"
 # Get service file exec paths
 wormholed_exec_path=$(jq -r ".files.wormholed.path" "$manifest")
 wormholeinstalld_exec_path=$(jq -r ".files.wormholeinstalld.path" "$manifest")
-
+wormholed_exec=$(eval echo "$wormholed_exec_path")
+wormholeinstalld_exec=$(eval echo "$wormholeinstalld_exec_path")
 echo "Extracting files..."
 for file_id in $(jq -r '.files | keys | .[]' "$manifest"); do
     source=$(jq -r ".files.\"$file_id\".source" "$manifest")
@@ -83,10 +84,10 @@ for file_id in $(jq -r '.files | keys | .[]' "$manifest"); do
     echo "- ${source} to ${path}..."
     # Replace teplate to the service file paths
     if [[ $file_id == "wormholed-service" ]]; then
-        sed -i "s|${exec_start_path_template}|${wormholed_exec_path}|g" "${new_distro_dir}${source}"
+        sed -i "s|${exec_start_path_template}|${wormholed_exec}|g" "${new_distro_dir}${source}"
     fi
     if [[ $file_id == "wormholeinstalld-service" ]]; then
-        sed -i "s|${exec_start_path_template}|${wormholeinstalld_exec_path}|g" "${new_distro_dir}${source}"
+        sed -i "s|${exec_start_path_template}|${wormholeinstalld_exec}|g" "${new_distro_dir}${source}"
     fi
     # Copy temp file to install destination
     cp ${new_distro_dir}${source} "${path}"
