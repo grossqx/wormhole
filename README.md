@@ -130,9 +130,7 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 # TODOs:
 
 wormhole tool
-- exclude migration order on cloning
 - backup and restore
-    - detect separate volume mounts in docker stacks
     - run backup or restore over one or all docker stacks
         - stop stack
         - run backups/restores
@@ -140,8 +138,6 @@ wormhole tool
 - sync backup folder to other hosts
 
 wormholed.sh
-- disable wifi if ethernet available
-- enable wifi if ethernet is missing
 - auto-updates
     - system updates (nfs, ssh, etc.)
     - wormhole updates
@@ -161,3 +157,6 @@ wormholeinstalld.sh:
 wormhole-installer:
 - fix incorrect network interface being picked when pi is on both eth and wifi
 - mc theme setter fix
+
+refactoring:
+- duplicated variables

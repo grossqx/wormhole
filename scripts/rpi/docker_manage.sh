@@ -4,9 +4,8 @@ STACKS_DIR="${docker_configs}/stacks"
 PREFIX="[docker manage] "
 supported_compose_commands="up down pull create ps logs ls stats start stop restart kill"
 supported_config_commands="services images networks volumes"
-supported_custom_commands="list"
+supported_custom_commands="list mounts"
 
-# Check if required paths are set
 if [ -z "$docker_configs" ]; then
     echo "Error: STACKS_DIR (derived from docker_configs) is not set. Exiting."
     exit 1
@@ -24,7 +23,15 @@ ACTION=$1
 shift # Shift arguments so $@ now contains the list of requested stacks
 REQUESTED_STACKS=("$@")
 
-manage_stack() {
+get_local_volumes() {
+    local compose_file=$1
+    local yq_query=".services[].volumes[] | select(.type == \"bind\") | .source"
+    sudo docker compose -f "$compose_file" config | \
+        yq "$yq_query" | \
+        sort -u
+}
+
+function manage_stack() {
   local stack_name=$1
   local action=$2
   local compose_file=""
@@ -41,7 +48,11 @@ manage_stack() {
     echo "${PREFIX}Warning: No Docker Compose file (*compose.yaml/yml) found in '$search_dir'. Skipping ${action} for ${stack_name}."
     return
   fi
-  if echo "$supported_config_commands" | grep -w -q "$action"; then
+  if [[ $action == "mounts" ]]; then
+      source "${docker_configs}/environment.sh"
+      get_local_volumes "$compose_file"
+      return
+  elif echo "$supported_config_commands" | grep -w -q "$action"; then
       sudo docker compose -f "$compose_file" config --"$action"
   elif echo "$supported_compose_commands" | grep -w -q "$action"; then
     echo "${PREFIX}Performing 'docker compose ${action}' for stack $stack_name"
@@ -52,7 +63,7 @@ manage_stack() {
     fi
   else
     echo "Error: unknown stack action: $action"
-    echo "Supported actions are: $supported_compose_commands"
+    echo "Supported actions are: $supported_compose_commands ${supported_custom_commands}"
     exit 1
   fi
 }
@@ -61,7 +72,7 @@ manage_stack() {
 find "$STACKS_DIR" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
     STACK_NAME=$(basename "$stack_dir")
     if [[ $ACTION == "list" ]]; then
-        echo $STACK_NAME
+        echo "$STACK_NAME"
         continue
     fi
     # If specific stacks were requested, check if the current stack is one of them

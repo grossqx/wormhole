@@ -1,5 +1,20 @@
 #!/bin/bash
 
+binary_name="wormhole"
+version="placeholder version"
+declare -a TEST_HOSTS=("isc.org" "google.com" "cloudflare.com" "1.1.1.1" "8.8.8.8")
+
+command="$1"
+
+# Resolve parent directory
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+base_dir="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 function show_help(){
     echo "Wormhole ${version}"
 }
@@ -29,21 +44,6 @@ if [ -f ${migration_order} ]; then
     fi
 fi
 }
-
-command="$1"
-
-version="placeholder version"
-
-# Resolve parent directory
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-base_dir="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
-binary_name="wormhole"
 
 # Files to be sourced
 dependencies=(
@@ -164,7 +164,11 @@ case $command in
             ${base_dir}/docker_update_env.sh
         elif [[ $docker_command == 'stack' ]]; then
             shift
-            ${base_dir}/docker_manage.sh $@
+            if [[ $1 == "mounts" ]]; then
+                ${base_dir}/docker_manage.sh $@ | sort -u
+            else
+                ${base_dir}/docker_manage.sh $@
+            fi
         elif [[ $docker_command == 'backup' ]]; then
             for current_volume_path in "$docker_volumes"/*/; do
                 source_dir="${current_volume_path%/}"

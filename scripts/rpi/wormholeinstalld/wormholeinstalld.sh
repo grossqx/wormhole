@@ -1,6 +1,6 @@
 #!/bin/bash
 
-package_list_dependency="bc jq"
+package_list_dependency="bc jq yq"
 
 package_list_additional="nmap nfs-kernel-server ffmpeg mc"
 
