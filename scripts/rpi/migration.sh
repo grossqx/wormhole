@@ -19,7 +19,7 @@ function schedule_cloning(){
     local to="$2"
     echo "--- Cloning from ${from} to ${to} scheduled"
     echo "# Clone current drive to ${to}" >> $plan
-    echo "$binary_dir/rpi-clone $to -U" >> $plan
+    echo "$binary_dir/rpi-clone $to -U --exclude='$plan'" >> $plan
 }
 
 function schedule_boot_order_change(){
