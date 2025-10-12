@@ -2,7 +2,6 @@
 
 binary_name="wormhole"
 version="placeholder version"
-declare -a TEST_HOSTS=("isc.org" "google.com" "cloudflare.com" "1.1.1.1" "8.8.8.8")
 
 command="$1"
 

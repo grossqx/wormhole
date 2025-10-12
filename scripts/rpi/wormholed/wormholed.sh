@@ -1,6 +1,8 @@
 #!/bin/bash
 
+service_name="wormholed.service"
 report_interval=60
+declare -a TEST_HOSTS=("isc.org" "google.com" "cloudflare.com" "1.1.1.1" "8.8.8.8")
 
 # Service management and systemd reports
 function sdreport(){
@@ -40,7 +42,39 @@ function main_loop(){
     wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
 }
 
+function check_internet() {
+    local host
+    local retry_count=0
+    local MAX_RETRIES=3
+    local RETRY_DELAY=5
+    while [ "$retry_count" -lt "$MAX_RETRIES" ]; do
+        for host in "${TEST_HOSTS[@]}"; do
+            if ping -c 1 -W 3 "$host" > /dev/null 2>&1; then
+                return 0
+            fi
+        done
+        retry_count=$((retry_count + 1))        
+        if [ "$retry_count" -lt "$MAX_RETRIES" ]; then
+            sleep "$RETRY_DELAY"
+        fi
+    done
+    return 1
+}
 
+function is_ethernet_active() {
+    ETH_IFACES=$(ip addr show | awk -F: '/: e/{print $2}' | tr -d ' ')
+    for IFACE in $ETH_IFACES; do
+        if ip addr show dev "$IFACE" | grep -q "inet "; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+function is_wifi_blocked() {
+    rfkill list wifi | grep -q "Soft blocked: yes"
+    return $?
+}
 
 # Files to be sourced
 dependencies=(
@@ -113,6 +147,37 @@ else
     sdreport_ready "Started"
 fi
 
+# Test internet connection. 
+check_internet
+online=$?
+if [[ $online -eq 0 ]]; then
+    echo "Internet connection is confirmed."
+    wh_log "Starting up ${service_name}"
+    if is_ethernet_active; then
+        echo "Connection is via Ethernet."
+        if ! is_wifi_blocked; then
+            echo "Action: Wi-Fi is currently enabled. Disabling to optimize power."
+            wh_log "Wi-Fi is currently enabled. Disabling to optimize power."
+            rfkill block wifi
+        else
+            echo "Wi-Fi is already disabled. No change needed."
+        fi
+    else
+        echo "Internet is up, but no Ethernet link is active. Keeping Wi-Fi enabled."
+    fi
+else
+    echo "Warning: Internet connection is currently DOWN."
+    wh_log_local "Starting up ${service_name}"
+    if is_wifi_blocked; then
+        echo "Action: Wi-Fi is disabled and internet is down. Enabling Wi-Fi."
+        wh_log_local "Wi-Fi is disabled and internet is down. Enabling Wi-Fi."
+        rfkill unblock wifi
+    else
+        echo "Wi-Fi is already enabled. No change needed."
+    fi
+fi
+#wh_log "Starting the 
+
 # Check boot media
 current_boot_path=$(mount | grep " / " | awk '{print $1}')
 if [ -z $WH_BOOT_DEVICE ]; then
@@ -121,6 +186,11 @@ else
     resolved_device=$(wh-storage-resolve $WH_BOOT_DEVICE)
     if echo "$current_boot_path" | grep -q "$resolved_device"; then
         echo "Currently booted from the Primary device: ${resolved_device}"
+        if [[ $online -eq 0 ]]; then
+            wh_log "Currently booted from the Primary device: ${resolved_device}"
+        else
+            wh_log_local "Currently booted from the Primary device: ${resolved_device}"
+        fi
     fi
 fi
 if [ -z $WH_BOOT_DEVICE2 ]; then
@@ -129,6 +199,11 @@ else
     resolved_device2=$(wh-storage-resolve $WH_BOOT_DEVICE2)
     if echo "$current_boot_path" | grep -q "$resolved_device2"; then
         echo "Currently booted from the Secondary device: ${resolved_device}"
+        if [[ $online -eq 0 ]]; then
+            wh_log "Currently booted from the Secondary device: ${resolved_device}"
+        else
+            wh_log_local "Currently booted from the Secondary device: ${resolved_device}"
+        fi
     fi
 fi
 
