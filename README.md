@@ -143,11 +143,11 @@ wormholed.sh
     - wormhole updates
 - help
 
-server:
-- create api-keys and example config file from node-red if they are not present
-
 docker setup:
 - DNS troubleshooting
+
+server:
+- create api-keys and example config file from node-red if they are not present
 
 wormholeinstalld.sh:
 - fix progress bar stages

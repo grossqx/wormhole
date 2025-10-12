@@ -30,6 +30,8 @@ function execute_migration(){
     else
         wh_log "Migration successfull. Removing ${migration_order}"
         rm -f ${migration_order}
+        wh_log "Rebooting after migration in 1 minute"
+        shutdown -r +1
     fi
 }
 
