@@ -168,7 +168,7 @@ function get_install_progress() {
     local progress_calculation=$(bc -l <<< "scale=4; \
         ( ($stage / $total_stages) + \
         ( ($stage_progress - $min_stage_progress) / ($max_stage_progress - $min_stage_progress) / $total_stages) ) * 100.0")
-    printf "%.3f\n" "$(echo "$progress_calculation" | cut -d'.' -f1-2)"
+    printf "%.2f\n" "$(echo "$progress_calculation" | cut -d'.' -f1-2)"
 }
 
 # The function to detect progress numbers in a given line.

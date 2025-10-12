@@ -4,6 +4,32 @@ function show_help(){
     echo "Wormhole ${version}"
 }
 
+function execute_migration(){
+    wh_log "Running the migration order ${migration_order}"
+    chmod +x ${migration_order}
+    ${migration_order} | while read -r line; do
+        wh_log "$line" 
+    done
+    result=${PIPESTATUS[0]}
+    if [ $result -ne 0 ]; then
+        wh_log "Error: ${migration_order} failed with status $result."
+    else
+        wh_log "Migration successfull. Removing ${migration_order}"
+        rm -f ${migration_order}
+    fi
+}
+
+function check_migration_plans(){
+if [ -f ${migration_order} ]; then
+    wh_log "New migration order discovered"
+    if systemctl is-enabled --quiet ${install_service_name}.service; then
+        wh_log "${install_service_name} is still enabled. Delaying migration until installation is finished."
+    else
+        execute_migration
+    fi
+fi
+}
+
 command="$1"
 
 version="placeholder version"
@@ -98,6 +124,8 @@ fi
 docker_configs="${base_dir}/docker"
 docker_volumes="${WH_HOME}/docker_storage"
 backup_dir="${WH_HOME}/backups"
+migration_order="${WH_HOME}/migration_order.sh"
+install_service_name="wormholeinstalld"
 
 export docker_configs
 export docker_volumes
@@ -122,6 +150,9 @@ case $command in
     migrate)
         ${base_dir}/migration.sh
         exit 0
+        ;;
+    migrate-run)
+        check_migration_plans
         ;;
     docker)
         shift

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 report_interval=60
-install_service_name="wormholeinstalld"
 
 # Service management and systemd reports
 function sdreport(){
@@ -41,22 +40,7 @@ function main_loop(){
     wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
 }
 
-function execute_migration_order(){
-    echo "Running the migration order ${migration_order}"
-    sdreport "Executing migration order"
-    ${migration_order} | while read -r line; do
-        echo "$line"
-        wh_log "$line" 
-    done
-    result=${PIPESTATUS[0]}
-    if [ $result -ne 0 ]; then
-        echo "Error: ${migration_order} failed with status $result."
-        sdreport "Migration order failed: status $result."
-    else
-        echo "Migration successfull."
-        sdreport "Migration order completed."
-    fi
-}
+
 
 # Files to be sourced
 dependencies=(
@@ -121,8 +105,6 @@ for func in "${required_functions[@]}"; do
     fi
 done
 
-migration_order="${WH_HOME}/migration_order.sh"
-
 # Report on state
 if [[ $error_occurred == "true" ]]; then
     echo -e "Configuration check failed:\n$initialization_errors"
@@ -150,17 +132,9 @@ else
     fi
 fi
 
-# Check for migration orders and updates
-if [ -f ${migration_order} ]; then
-    echo "New migration order discovered"
-    if systemctl is-enabled --quiet ${install_service_name}.service; then
-        echo "${install_service_name} is still enabled. Delaying migration until installation is finished."
-        wh_log "$line"
-    else
-        main_loop # Run main loop at least once before the migration
-        execute_migration_order
-    fi
-fi
+main_loop
+
+sudo $WH_PATH/wormhole.sh migrate-run
 
 # Main loop
 while true; do

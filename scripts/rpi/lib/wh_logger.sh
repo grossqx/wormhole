@@ -91,7 +91,7 @@ function wh_log_remote() {
     fi
     local message="$1"
     local api_url="${WH_SERVER_API_URL}/wh/log"
-    local topic="log"
+    local topic="$(whoami)"
     local timestamp=$(date +%s%3N)
     PAYLOAD=$(jq --null-input \
                 --argjson timestamp "$timestamp" \

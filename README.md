@@ -130,27 +130,21 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 # TODOs:
 
 wormhole tool
+- exclude migration order on cloning
 - backup and restore
-    - run backup or restore over docker stack or all stacks (like manage)
+    - detect separate volume mounts in docker stacks
+    - run backup or restore over one or all docker stacks
+        - stop stack
+        - run backups/restores
+        - run stack
 - sync backup folder to other hosts
 
-wormhole-installer:
-- fix incorrect network interface being picked when pi is on both eth and wifi
-- mc theme setter fix
-
-wormholeinstalld.sh:
-- fix percentage decimal
-- fix progress bar stages
-- restore docker volumes from backup
-- nfs server (userful.sh)
-- ufw
-
 wormholed.sh
-- add wh_log throughout the main script
+- disable wifi if ethernet available
+- enable wifi if ethernet is missing
 - auto-updates
     - system updates (nfs, ssh, etc.)
     - wormhole updates
-
 - help
 
 server:
@@ -158,3 +152,12 @@ server:
 
 docker setup:
 - DNS troubleshooting
+
+wormholeinstalld.sh:
+- fix progress bar stages
+- restore docker volumes from backup
+- ufw
+
+wormhole-installer:
+- fix incorrect network interface being picked when pi is on both eth and wifi
+- mc theme setter fix
