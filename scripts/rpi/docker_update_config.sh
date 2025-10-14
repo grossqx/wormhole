@@ -18,9 +18,12 @@
 #   set in the user's environment.
 #
 # ==============================================================================
-
-if [ -z "$WH_HARDWARE_API_KEY" ] || [ -z "$WH_SERVER_API_URL" ] || [ -z "$WH_CRYPTO_KEY" ]; then
-    echo "Error: One of the environment variables (WH_HARDWARE_API_KEY, WH_SERVER_API_URL, WH_CRYPTO_KEY) are missing." >&2
+if [ -z "$WH_HARDWARE_API_KEY" ] || [ -z "$WH_SERVER_API_URL" ] || [ -z "$WH_CRYPTO_KEY" ] || [ -z "$WH_CRYPTO_CIPHER" ] || [ -z "$WH_CRYPTO_DERIVATION" ]; then
+    echo "Error: One of the environment variables (WH_HARDWARE_API_KEY, WH_SERVER_API_URL, WH_CRYPTO_KEY, WH_CRYPTO_CIPHER, WH_CRYPTO_DERIVATION) are missing." >&2
+    exit 1
+fi
+if [ -z "$docker_dir" ]; then
+    echo "Error: docker_dir var empty"
     exit 1
 fi
 
@@ -28,8 +31,6 @@ endpoint_update="/wh/rpi.docker"
 api_domain=${WH_SERVER_API_URL}
 distro_url="${WH_SERVER_API_URL}${endpoint_update}"
 sha_url="${distro_url}.sha256"
-key_derivation="-pbkdf2"
-crypto_cipher="-aes-256-cbc"
 
 echo "Updating the docker configuration from ${api_domain}..."
 
@@ -46,7 +47,7 @@ if [ $response -ne 200 ]; then
 fi
 
 echo "Decrypting archive..."
-openssl enc -d ${crypto_cipher} ${key_derivation} -in ${new_distro_tar_enc} -out ${new_distro_tar} -k "$WH_CRYPTO_KEY"
+openssl enc -d ${WH_CRYPTO_CIPHER} ${WH_CRYPTO_DERIVATION} -in ${new_distro_tar_enc} -out ${new_distro_tar} -k "$WH_CRYPTO_KEY"
 
 echo "Requesting the SHA256 checksum..."
 sha256=$(curl -s -f "${sha_url}")
@@ -71,11 +72,11 @@ rm -f "${new_distro_tar_enc}"
 echo "Contents of temporary directory:"
 ls "${new_distro_dir}"
 
-echo "Copying contents from ${new_distro_dir} to ${docker_configs}..."
+echo "Copying contents from ${new_distro_dir} to ${docker_dir}..."
 
-cp -r "${new_distro_dir}/." "${docker_configs}"
+cp -r "${new_distro_dir}/." "${docker_dir}"
 if [[ $? -ne 0 ]]; then
-    echo "Error when copying files to ${docker_configs}"
+    echo "Error when copying files to ${docker_dir}"
     exit 1
 fi
 

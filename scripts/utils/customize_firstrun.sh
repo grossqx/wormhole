@@ -2,15 +2,14 @@
 
 set -e
 
-if [ "$#" -ne 4 ]; then
-    echo "Usage: $0 <config_file_path> <template_script> <output_script> <crypto key>"
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <config_file_path> <template_script> <output_script>"
     exit 1
 fi
 
 CONFIG_FILE="$1"
 TEMPLATE_FILE="$2"
 OUTPUT_FILE="$3"
-CRYPTO_KEY="$4"
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Error: Configuration file '$CONFIG_FILE' not found."
@@ -45,7 +44,9 @@ sed -i "s|WH_INSTALL_USER=\"\"|WH_INSTALL_USER=\"${install_user}\"|g" "$OUTPUT_F
 sed -i "s|WH_INSTALL_USER_IP=\"\"|WH_INSTALL_USER_IP=\"${install_user_ip}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_SERVER_API_URL=\"\"|WH_SERVER_API_URL=\"${api_domain}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_HARDWARE_API_KEY=\"\"|WH_HARDWARE_API_KEY=\"${RPI_HARDWARE_API_KEY}\"|g" "$OUTPUT_FILE"
-sed -i "s|WH_CRYPTO_KEY=\"\"|WH_CRYPTO_KEY=\"${CRYPTO_KEY}\"|g" "$OUTPUT_FILE"
+sed -i "s|WH_CRYPTO_DERIVATION=\"\"|WH_CRYPTO_DERIVATION=\"${key_derivation}\"|g" "$OUTPUT_FILE"
+sed -i "s|WH_CRYPTO_CIPHER=\"\"|WH_CRYPTO_CIPHER=\"${crypto_cipher}\"|g" "$OUTPUT_FILE"
+sed -i "s|WH_CRYPTO_KEY=\"\"|WH_CRYPTO_KEY=\"${crypto_key}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_IP_ADDR=\"\"|WH_IP_ADDR=\"${RPI_IP_ADDR}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_DOMAIN=\"\"|WH_DOMAIN=\"${RPI_DOMAIN}\"|g" "$OUTPUT_FILE"
 sed -i "s|WH_WIREGUARD_PORT=\"\"|WH_WIREGUARD_PORT=\"${RPI_WH_PORT}\"|g" "$OUTPUT_FILE"

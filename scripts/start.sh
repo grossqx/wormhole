@@ -496,8 +496,8 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         --uninstall)
-            get_user_input -l "This will remove ${app_name}, clean up persistent data, caches, environment variables and symlinks. Do you want to continue?"
-            ${base_dir}/uninstall.sh
+            get_user_input -l -n "This will remove ${app_name}, clean up persistent data, caches, environment variables and symlinks. Do you want to continue?"
+            [[ $? -eq 0 ]] && ${base_dir}/uninstall.sh
             exit 0
             ;;
         --media)
@@ -519,7 +519,7 @@ while [[ $# -gt 0 ]]; do
             echo "Previous installation data removed"
             exit 0
             ;;
-        -*)
+        *)
             # Handle any unknown options.
             echo "Error: Unknown option: '$1'" >&2
             show_help
@@ -585,6 +585,9 @@ fi
 
 
 ## Export functions anv variables for child scripts
+export key_derivation
+export crypto_cipher
+export crypto_key
 export -f get_user_input
 export -f send_report
 export base_dir
@@ -866,7 +869,7 @@ ${base_dir}/utils/print_config.sh "${configuration_file}"
 ## ============================================================
 CHECKPOINT=$(get_checkpoint)
 if (( CHECKPOINT < 7)); then
-    ${base_dir}/utils/customize_firstrun.sh "${configuration_file}" "${firstrun_template_file}" "${firstrun_file}" ${crypto_key}
+    ${base_dir}/utils/customize_firstrun.sh "${configuration_file}" "${firstrun_template_file}" "${firstrun_file}"
     result=$?
     if [[ $result -eq 0 ]]; then
         FIRSTRUN_READY=true
@@ -1140,7 +1143,7 @@ CHECKPOINT=$(get_checkpoint)
 if (( CHECKPOINT < 13)); then
     source ${configuration_file}
     send_report "Trying to upload configuration for ${RPI_CONFIG_NAME} - ${install_id}"
-    ${base_dir}/utils/upload_config.sh "${configuration_file}" "${api_domain}${endpoint_upload_config}" "${api_key}" "${crypto_key}" "${crypto_cipher}" "${key_derivation}"
+    ${base_dir}/utils/upload_config.sh "${configuration_file}" "${api_domain}${endpoint_upload_config}" "${api_key}"
     result=$?
     if [[ $result -eq 0 ]]; then
         send_report "Recieved confirmation from the server that ${RPI_CONFIG_NAME} - ${install_id} was uploaded."

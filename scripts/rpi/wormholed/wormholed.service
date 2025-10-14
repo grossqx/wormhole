@@ -6,8 +6,7 @@ Wants=network-online.target
 [Service]
 Type=notify
 ExecStart=/bin/bash ___EXEC_START_PATH___
-User=wormhole
-Group=wormhole
+User=root
 # video for RPI hardware access (/dev/vcio);
 SupplementaryGroups=video
 # Allow child processes to send notifications

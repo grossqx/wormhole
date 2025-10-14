@@ -78,6 +78,8 @@ WH_INSTALL_USER=""
 WH_INSTALL_USER_IP=""
 WH_SERVER_API_URL=""
 WH_HARDWARE_API_KEY=""
+WH_CRYPTO_DERIVATION=""
+WH_CRYPTO_CIPHER=""
 WH_CRYPTO_KEY=""
 WH_IP_ADDR=""
 WH_DOMAIN=""
@@ -147,6 +149,8 @@ WH_INSTALL_USER="${WH_INSTALL_USER}"
 WH_INSTALL_USER_IP="${WH_INSTALL_USER_IP}"
 WH_SERVER_API_URL="${WH_SERVER_API_URL}"
 WH_HARDWARE_API_KEY="${WH_HARDWARE_API_KEY}"
+WH_CRYPTO_DERIVATION="${WH_CRYPTO_DERIVATION}"
+WH_CRYPTO_CIPHER="${WH_CRYPTO_CIPHER}"
 WH_CRYPTO_KEY="${WH_CRYPTO_KEY}"
 WH_IP_ADDR="${WH_IP_ADDR}"
 WH_DOMAIN="${WH_DOMAIN}"
@@ -223,6 +227,7 @@ extract_file "docker_install" 2>&1 | log
 extract_file "docker_update_config" 2>&1 | log
 extract_file "docker_update_env" 2>&1 | log
 extract_file "docker_manage" 2>&1 | log
+extract_file "docker_backups" 2>&1 | log
 extract_file "ufw_config" 2>&1 | log
 extract_file "nfs_config" 2>&1 | log
 extract_file "git_install" 2>&1 | log

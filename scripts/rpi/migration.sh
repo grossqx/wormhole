@@ -14,9 +14,22 @@ function missing_device(){
     echo "Please reconfigure expected boot devices or connect the storage and reboot."
 }
 
+function schedule_migration(){
+    if [ ! -f $plan ]; then
+        echo "--- New migration plan created"
+        echo "#!/bin/bash" > $plan
+        echo "#" >> $plan
+        echo "# Migration" >> $plan
+        echo >> $plan
+        echo "set -e" >> $plan
+        echo >> $plan
+    fi
+}
+
 function schedule_cloning(){
     local from="$1"
     local to="$2"
+    schedule_migration
     echo "--- Cloning from ${from} to ${to} scheduled"
     echo "# Clone current drive to ${to}" >> $plan
     echo "$binary_dir/rpi-clone $to -U --exclude='$plan'" >> $plan
@@ -24,6 +37,7 @@ function schedule_cloning(){
 
 function schedule_boot_order_change(){
     local to="$1"
+    schedule_migration
     echo "--- Boot order change to ${to} scheduled"
     echo "# Set boot order to $to" >> $plan
     echo "${WH_PATH}/set_boot_order.sh -device $to" >> $plan
@@ -43,10 +57,8 @@ echo "Boot Information"
 echo "Booted from $(mount | grep " / ")"
 
 echo "[2/${total_steps}] Checking and updating rpi-clone repository at ${rpiclone_repo}"
-
 if [ -d "$rpiclone_repo" ]; then
-    echo "Directory ${rpiclone_repo} found. Performing git pull..."
-    
+    echo "Directory ${rpiclone_repo} found. Performing git pull..." 
     if cd "$rpiclone_repo"; then
         if git pull; then
             echo "rpi-clone repository updated successfully."
@@ -60,7 +72,7 @@ if [ -d "$rpiclone_repo" ]; then
         exit 1
     fi
 else
-    echo "Error: rpi-clone repository directory ${rpiclone_repo} does not exist. Please clone it first."
+    echo "Error: rpi-clone repository directory ${rpiclone_repo} does not exist. Clone it first."
     exit 1
 fi
 
@@ -96,7 +108,7 @@ if [ ! -z "$WH_BOOT_DEVICE" ]; then
         lsblk ${resolved_device}
         boot_primary_found=1
         if echo "$current_boot_path" | grep -q "$resolved_device"; then
-            echo "✅ Currently booted from the Primary device: ${resolved_device}"
+            echo "Currently booted from the Primary device: ${resolved_device}"
             boot_current="primary"
         fi
     else
@@ -114,7 +126,7 @@ if [ ! -z "$WH_BOOT_DEVICE2" ]; then
         lsblk ${resolved_device2}
         boot_secondary_found=1
         if echo "$current_boot_path" | grep -q "$resolved_device2"; then
-            echo "✅ Currently booted from the Secondary device: ${resolved_device2}"
+            echo "Currently booted from the Secondary device: ${resolved_device2}"
             boot_current="secondary"
         fi
     else
@@ -125,9 +137,6 @@ else
 fi
 
 echo "[5/${total_steps}] Making a migration plan"
-echo "#!/bin/bash" > $plan
-echo >> $plan
-echo "set -e" >> $plan
 if [[ $boot_current == "primary" ]]; then
     if [[ $boot_secondary_found -eq 1 ]]; then
         echo "Scheduling cloning from ${resolved_device} (primary) to ${resolved_device2} (secondary)"
@@ -151,11 +160,12 @@ else
     exit 1
 fi
 
-echo "------ Migration plan: --------"
+echo -e "\n"
+echo "------ Migration plan created: --------"
 cat $plan
-echo "-------------------------------"
-echo
-echo "Plan will be run by wormholed on next boot"
+echo "---------------------------------------"
+echo -e "\n"
+echo "Plan will be automatically run by wormholed.service on next boot"
 echo "To cancel the migration: sudo rm $plan"
-echo
+echo -e "\n"
 echo "[6/${total_steps}] Migration script complete"

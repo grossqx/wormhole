@@ -4,9 +4,10 @@ PREFIX="[docker update env] "
 
 echo "Fetching environment variables"
 
+source ${docker_dir}/environment.sh
+export docker_dir
 export docker_configs
 export docker_volumes
-source ${docker_configs}/environment.sh
 
 echo "Scanning for required variables per-stack in $STACKS_DIR"
 

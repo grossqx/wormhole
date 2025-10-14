@@ -18,7 +18,7 @@ function show_help(){
     echo "Wormhole ${version}"
 }
 
-function execute_migration(){
+function run_migration_order(){
     wh_log "Running the migration order ${migration_order}"
     chmod +x ${migration_order}
     ${migration_order} | while read -r line; do
@@ -41,8 +41,10 @@ if [ -f ${migration_order} ]; then
     if systemctl is-enabled --quiet ${install_service_name}.service; then
         wh_log "${install_service_name} is still enabled. Delaying migration until installation is finished."
     else
-        execute_migration
+        run_migration_order
     fi
+else
+    wh_log "No migration orders to execute"
 fi
 }
 
@@ -62,6 +64,8 @@ required_vars=(
     "WH_INSTALL_USER_IP"
     "WH_SERVER_API_URL"
     "WH_HARDWARE_API_KEY"
+    "WH_CRYPTO_DERIVATION"
+    "WH_CRYPTO_CIPHER"
     "WH_CRYPTO_KEY"
     "WH_IP_ADDR"
     "WH_DOMAIN"
@@ -122,18 +126,24 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-docker_configs="${base_dir}/docker"
-docker_volumes="${WH_HOME}/docker_storage"
-backup_dir="${WH_HOME}/backups"
+docker_dir="${base_dir}/docker"
+docker_configs="${docker_dir}/configs" && mkdir -p "${docker_configs}"
+docker_stacks="${docker_dir}/stacks" && mkdir -p "${docker_stacks}"
+docker_volumes="${WH_HOME}/docker_storage" && mkdir -p "${docker_volumes}"
+backup_dir="${WH_HOME}/backups" && mkdir -p "${backup_dir}"
 migration_order="${WH_HOME}/migration_order.sh"
 install_service_name="wormholeinstalld"
 
+export base_dir
+export docker_dir
 export docker_configs
+export docker_stacks
 export docker_volumes
-
-mkdir -p "${docker_configs}"
-mkdir -p "${docker_volumes}"
-mkdir -p "${backup_dir}"
+export backup_dir
+export -f wh-backup
+export -f wh-restore
+export -f wh-generate-backup-basename
+export -f wh-get-latest-backup
 
 case $command in
     --version|-v|-V|--v|--V)
@@ -152,7 +162,7 @@ case $command in
         ${base_dir}/migration.sh
         exit 0
         ;;
-    migrate-run)
+    check-migration-plans)
         check_migration_plans
         ;;
     docker)
@@ -160,6 +170,7 @@ case $command in
         docker_command="$1"
         if [[ $docker_command == 'update' ]]; then
             ${base_dir}/docker_update_config.sh
+            [ $? -ne 0 ] && exit 1
             ${base_dir}/docker_update_env.sh
         elif [[ $docker_command == 'update-env' ]]; then
             ${base_dir}/docker_update_env.sh
@@ -171,10 +182,21 @@ case $command in
                 ${base_dir}/docker_manage.sh $@
             fi
         elif [[ $docker_command == 'backup' ]]; then
-            for current_volume_path in "$docker_volumes"/*/; do
-                source_dir="${current_volume_path%/}"
-                [ -d "$source_dir" ] && wh-backup "$source_dir" "$backup_dir"
-            done
+            shift
+            ${base_dir}/docker_manage.sh stop $@
+            ${base_dir}/docker_backups.sh backup $@
+            ${base_dir}/docker_manage.sh start $@
+        elif [[ $docker_command == 'full-restore' ]]; then
+            shift
+            ${base_dir}/docker_manage.sh down $@
+            ${base_dir}/docker_manage.sh create $@
+            ${base_dir}/docker_backups.sh restore $@
+            ${base_dir}/docker_manage.sh start $@
+        elif [[ $docker_command == 'restore' ]]; then
+            shift
+            ${base_dir}/docker_manage.sh stop $@
+            ${base_dir}/docker_backups.sh restore $@
+            ${base_dir}/docker_manage.sh start $@
         else
             echo "docker what?"
             echo "Usage: $0 <update update-env stack>"

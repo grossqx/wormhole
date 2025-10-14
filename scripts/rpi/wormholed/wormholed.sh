@@ -92,6 +92,8 @@ required_vars=(
     "WH_INSTALL_USER_IP"
     "WH_SERVER_API_URL"
     "WH_HARDWARE_API_KEY"
+    "WH_CRYPTO_DERIVATION"
+    "WH_CRYPTO_CIPHER"
     "WH_CRYPTO_KEY"
     "WH_IP_ADDR"
     "WH_DOMAIN"
@@ -176,7 +178,6 @@ else
         echo "Wi-Fi is already enabled. No change needed."
     fi
 fi
-#wh_log "Starting the 
 
 # Check boot media
 current_boot_path=$(mount | grep " / " | awk '{print $1}')
@@ -200,16 +201,17 @@ else
     if echo "$current_boot_path" | grep -q "$resolved_device2"; then
         echo "Currently booted from the Secondary device: ${resolved_device}"
         if [[ $online -eq 0 ]]; then
-            wh_log "Currently booted from the Secondary device: ${resolved_device}"
+            wh_log "Currently booted from the Secondary device: ${resolved_device2}"
         else
-            wh_log_local "Currently booted from the Secondary device: ${resolved_device}"
+            wh_log_local "Currently booted from the Secondary device: ${resolved_device2}"
         fi
     fi
 fi
 
 main_loop
 
-sudo $WH_PATH/wormhole.sh migrate-run
+# Run any existing migration order
+sudo $WH_PATH/wormhole.sh check-migration-plans
 
 # Main loop
 while true; do

@@ -4,11 +4,6 @@ url=$1
 api_key=$2
 CONFIG_PATH=$3
 
-# Decryption settings
-DECRYPTION_KEY="seed"
-CIPHER="-aes-256-cbc"
-KEY_DERIVATION="-pbkdf2"
-
 ## Text colors:
 source ${base_dir}/res/theme.env
 
@@ -63,11 +58,11 @@ function decrypt_password() {
     local context=$2
     local decrypted_password=""
     echo "Decrypting ${context} password..." >&2
-    decrypted_password=$(echo "$encrypted_password" | base64 --decode | openssl enc "${CIPHER}" "${KEY_DERIVATION}" -d -salt -pass pass:"${DECRYPTION_KEY}" 2>/dev/null | tail -n 1)
+    decrypted_password=$(echo "$encrypted_password" | base64 --decode | openssl enc "${crypto_cipher}" "${key_derivation}" -d -salt -pass pass:"${crypto_key}" 2>/dev/null | tail -n 1)
     if [[ -z "$decrypted_password" ]]; then
         errors=true
         echo -e "${T_YELLOW}${context} password decryption failed:" >&2
-        echo -e "$encrypted_password" | base64 --decode | openssl enc "${CIPHER}" "${KEY_DERIVATION}" -d -salt -pass pass:"${DECRYPTION_KEY}" >&2
+        echo -e "$encrypted_password" | base64 --decode | openssl enc "${crypto_cipher}" "${key_derivation}" -d -salt -pass pass:"${crypto_key}" >&2
         echo -e "${T_NC}" >&2
         return 1
     else

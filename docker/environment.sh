@@ -1,9 +1,9 @@
 #!/bin/bash
 
 TZ=$(timedatectl | grep "Time zone" | awk '{print $3}')
-STORAGE_PATH="$docker_volumes"
-STACKS_DIR="${docker_configs}/stacks"
-CONFIG_DIR="${docker_configs}/configs"
+STORAGE_PATH="${docker_volumes}"
+STACKS_DIR="${docker_stacks}"
+CONFIG_DIR="${docker_configs}"
 PUID=$(id -u wormhole)
 PGID=$(id -g wormhole)
 SERVER_NAME=$(hostname)

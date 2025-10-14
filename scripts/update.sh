@@ -20,6 +20,7 @@
 #
 # ==============================================================================
 
+
 # Configuration
 binary_name="wormhole-installer"
 symlink_path="/usr/local/bin/${binary_name}"
@@ -30,7 +31,6 @@ distro_url="${install_url}.distro"
 sha_url="${install_url}.sha256"
 key_derivation="-pbkdf2"
 crypto_cipher="-aes-256-cbc"
-
 
 INSTALL_MODE=0
 while getopts "i" opt; do

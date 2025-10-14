@@ -1,8 +1,6 @@
 #!/bin/bash
 
 BACKUP_PATTERN_WILDCARD="backup_????????_??????_"
-key_derivation="-pbkdf2"
-crypto_cipher="-aes-256-cbc"
 
 function wh-generate-backup-basename() {
     local source_dir="$1"
@@ -104,13 +102,12 @@ function wh-backup() {
         echo "Error: Output directory '$output_dir' does not exist." >&2
         return 1
     fi
-
     backup_filename="${output_dir}/$(wh-generate-backup-basename "$source_dir")"
     echo "Starting backup of '$source_dir' to '$backup_filename'"
     (
         cd "$source_dir" || { echo "Error: Cannot change to source directory $source_dir" >&2; return 1; }
         tar -pcf - . 2>/dev/null
-    ) | openssl enc "${crypto_cipher}" -salt "${key_derivation}" -k "${WH_CRYPTO_KEY}" > "$backup_filename"
+    ) | openssl enc "${WH_CRYPTO_CIPHER}" -salt "${WH_CRYPTO_DERIVATION}" -k "${WH_CRYPTO_KEY}" > "$backup_filename"
     exit_code=$?
 
     if [ $exit_code -eq 0 ]; then
@@ -145,8 +142,8 @@ function wh-restore() {
     fi
 
     echo "Starting restore of '$input_file' into '$output_dir'"
-    openssl enc -d "${crypto_cipher}" "${key_derivation}" -k "${WH_CRYPTO_KEY}" -in "$input_file" | \
-    sudo tar -xpf - -C "$output_dir"
+    openssl enc -d "${WH_CRYPTO_CIPHER}" "${WH_CRYPTO_DERIVATION}" -k "${WH_CRYPTO_KEY}" -in "$input_file" | \
+    tar -xpf - -C "$output_dir"
     exit_code=$?
 
     if [ $exit_code -eq 0 ]; then

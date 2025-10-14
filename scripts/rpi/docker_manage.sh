@@ -1,13 +1,12 @@
 #!/bin/bash
 
-STACKS_DIR="${docker_configs}/stacks"
 PREFIX="[docker manage] "
 supported_compose_commands="up down pull create ps logs ls stats start stop restart kill"
 supported_config_commands="services images networks volumes"
 supported_custom_commands="list mounts"
 
-if [ -z "$docker_configs" ]; then
-    echo "Error: STACKS_DIR (derived from docker_configs) is not set. Exiting."
+if [ -z "$docker_stacks" ]; then
+    echo "Error: docker_stacks is not set. Exiting."
     exit 1
 fi
 
@@ -35,7 +34,7 @@ function manage_stack() {
   local stack_name=$1
   local action=$2
   local compose_file=""
-  local search_dir="${STACKS_DIR}/${stack_name}"
+  local search_dir="${docker_stacks}/${stack_name}"
   local potential_files=( "$search_dir"/*compose.y{a,}ml )
 
   for file_path in "${potential_files[@]}"; do
@@ -48,10 +47,12 @@ function manage_stack() {
     echo "${PREFIX}Warning: No Docker Compose file (*compose.yaml/yml) found in '$search_dir'. Skipping ${action} for ${stack_name}."
     return
   fi
-  if [[ $action == "mounts" ]]; then
-      source "${docker_configs}/environment.sh"
-      get_local_volumes "$compose_file"
-      return
+  if echo "$supported_custom_commands" | grep -w -q "$action"; then
+    if [[ $action == "mounts" ]]; then
+        source "${docker_dir}/environment.sh"
+        get_local_volumes "$compose_file"
+        return
+    fi
   elif echo "$supported_config_commands" | grep -w -q "$action"; then
       sudo docker compose -f "$compose_file" config --"$action"
   elif echo "$supported_compose_commands" | grep -w -q "$action"; then
@@ -68,8 +69,8 @@ function manage_stack() {
   fi
 }
 
-# Find all potential stack directories in STACKS_DIR
-find "$STACKS_DIR" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
+# Find all potential stack directories in docker_stacks
+find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
     STACK_NAME=$(basename "$stack_dir")
     if [[ $ACTION == "list" ]]; then
         echo "$STACK_NAME"

@@ -56,6 +56,10 @@
             "source": "/rpi/docker_manage.sh",
             "path": "${WH_PATH}/docker_manage.sh"
         },
+        "docker_backups": {
+            "source": "/rpi/docker_backups.sh",
+            "path": "${WH_PATH}/docker_backups.sh"
+        },
         "migration": {
             "source": "/rpi/migration.sh",
             "path": "${WH_PATH}/migration.sh"

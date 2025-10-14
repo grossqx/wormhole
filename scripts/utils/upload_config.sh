@@ -9,17 +9,14 @@ source ${base_dir}/res/theme.env
 CONNECT_TIMEOUT=60
 MAX_TIME=120
 
-if [ "$#" -ne 6 ]; then
-    echo "Usage: $0 <config_file_path> <api_url> <api_key> <crypto_key> <cipher> <key_derivation>"
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <config_file_path> <api_url> <api_key>"
     exit 1
 fi
 
 CONFIG_PATH="$1"
 API_URL="$2"
 API_KEY="$3"
-CRYPTO_KEY="$4"
-CIPHER="$5"
-KEY_DERIVATION="$6"
 
 if [ -f "$CONFIG_PATH" ]; then
     source "$CONFIG_PATH"
@@ -48,7 +45,7 @@ PAYLOAD_JSON=$(jq --null-input \
                 "domain": $domain,
                 "wh-port": $wh_port
             }')
-ENCRYPTED_PAYLOAD=$(printf "%s" "$PAYLOAD_JSON" | openssl enc "${CIPHER}" "${KEY_DERIVATION}" -a -e -salt -pass pass:"${CRYPTO_KEY}")
+ENCRYPTED_PAYLOAD=$(printf "%s" "$PAYLOAD_JSON" | openssl enc "${crypto_cipher}" "${key_derivation}" -a -e -salt -pass pass:"${crypto_key}")
 if [ $? -ne 0 ]; then
     echo -e "${T_RED}Error: Encryption failed.${T_NC}"
     exit 1

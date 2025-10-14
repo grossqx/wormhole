@@ -75,7 +75,7 @@ function wh_send_payload() {
 
 function wh_log_local() {
     local message="$1"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | sudo tee -a "$WH_LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$WH_LOG_FILE"
 }
 
 

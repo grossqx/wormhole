@@ -2,7 +2,7 @@
 
 package_list_dependency="bc jq yq"
 
-package_list_additional="nmap nfs-kernel-server ffmpeg mc"
+package_list_additional="nmap mc"
 
 repositories_to_clone=(
     "https://github.com/geerlingguy/rpi-clone.git"
@@ -27,6 +27,8 @@ required_vars=(
     "WH_INSTALL_USER_IP"
     "WH_SERVER_API_URL"
     "WH_HARDWARE_API_KEY"
+    "WH_CRYPTO_DERIVATION"
+    "WH_CRYPTO_CIPHER"
     "WH_CRYPTO_KEY"
     "WH_IP_ADDR"
     "WH_DOMAIN"
@@ -317,6 +319,11 @@ if [ $boot_number -eq 2 ]; then
     apt-get install -y ${package_list_dependency} | while read -r line; do
         echo "$line" >> "${install_log_path}"
     done
+    
+    # Restart main service
+    systemctl restart wormholed.service | log
+    systemctl status wormholed.service | log
+
     # Catch the server up to logs from previous boot
     log_progress_state "Checking firstrun log"
     cat "${install_log_path}" | while read -r line; do
@@ -345,10 +352,6 @@ else
     log_progress_state "Starting up"
     echo "$message" | log
 fi
-
-rpi-sysinfo | while read -r line; do
-    echo "[rpi-sysinfo] $line" | log
-done
 
 # Init preflight check status
 preflight_checks_passed=true
@@ -558,9 +561,9 @@ case $install_stage in
             fi
         done
         stage_progress=2.0
-        log_progress_state "Stage ${install_stage} / Starting up docker stacks"
+        log_progress_state "Stage ${install_stage} / Docker creating containers"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${WH_PATH}/wormhole.sh docker stack up 2>&1 | while read -r line; do
+        ${WH_PATH}/wormhole.sh docker stack create 2>&1 | while read -r line; do
             echo "$line" | log
         done
         move_on_to_stage "5"
@@ -617,6 +620,7 @@ case $install_stage in
         log_progress_percent "$(get_install_progress "2" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         log_progress_state "Stage ${install_stage} / Rebooting"
         echo "$(hostname) will reboot in 1 minute. If migration is planned, it will be executed on next boot." | log
+        
         # Finalize log for the client
         echo "$marker_fin" | log
         shutdown -r +1
