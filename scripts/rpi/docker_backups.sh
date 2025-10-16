@@ -143,9 +143,7 @@ case "$MODE" in
             current_process=$((current_process + 1))
             OUTPUT_DIR="${stacks_path}"
             BACKUP_CAT_DIR="${backup_dir}/docker/stacks"
-            
-            INPUT_FILE=$(wh-get-latest-backup "$BACKUP_CAT_DIR" "stacks") 
-            
+            INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} "stacks")            
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (STACKS) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
                 if ! wh-restore "$INPUT_FILE" "$OUTPUT_DIR"; then
@@ -162,9 +160,7 @@ case "$MODE" in
             current_process=$((current_process + 1))
             OUTPUT_DIR="${docker_volumes}/${MOUNT}"
             BACKUP_CAT_DIR="${backup_dir}/docker/storage"
-            
-            INPUT_FILE=$(wh-get-latest-backup "$BACKUP_CAT_DIR" "$MOUNT") 
-
+            INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} ${MOUNT}) 2>&1
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (DATA) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
                 if ! wh-restore "$INPUT_FILE" "$OUTPUT_DIR"; then
@@ -181,9 +177,7 @@ case "$MODE" in
             current_process=$((current_process + 1))
             OUTPUT_DIR="${docker_configs}/${MOUNT}"
             BACKUP_CAT_DIR="${backup_dir}/docker/configs"
-            
-            INPUT_FILE=$(wh-get-latest-backup "$BACKUP_CAT_DIR" "$MOUNT") 
-
+            INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} ${MOUNT}) 
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (CONF) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
                 if ! wh-restore "$INPUT_FILE" "$OUTPUT_DIR"; then
@@ -200,9 +194,7 @@ case "$MODE" in
             current_process=$((current_process + 1))
             OUTPUT_DIR="$MOUNT"
             BACKUP_CAT_DIR="${backup_dir}/docker/other"
-            
-            INPUT_FILE=$(wh-get-latest-backup "$BACKUP_CAT_DIR" "$(basename "$MOUNT")") 
-            
+            INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} $(basename "$MOUNT")) 
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (OTHER) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
                 if ! wh-restore "$INPUT_FILE" "$OUTPUT_DIR"; then
@@ -222,10 +214,8 @@ case "$MODE" in
 esac
 
 echo "Docker ${MODE} complete."
-
 if [[ "$OPERATION_FAILED" -eq 1 ]]; then
     echo "Failure: One or more ${MODE} operations failed." >&2
     exit 1
 fi
-
 exit 0

@@ -309,9 +309,6 @@ echo "user id:" | log
 id wormhole | log
 echo "user groups:" | log
 groups wormhole | log
-echo "Allowing wormhole user to use the wormhole tool with sudo" | log
-RULE="wormhole ALL=(root) NOPASSWD: ${main_binary_path}"
-echo "$RULE" | sudo tee -a "/etc/sudoers" | log
 echo "Setting /etc/nologin.txt message" | log
 echo "I'm sorry, Dave. I'm afraid I can't do that." | tee /etc/nologin.txt
 ## ===============================================================================================================

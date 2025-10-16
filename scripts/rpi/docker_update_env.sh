@@ -19,7 +19,7 @@ find "$STACKS_DIR" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r 
     for sh_file in "$stack_dir"/*.sh; do
         if [ -f "$sh_file" ]; then
             echo "${PREFIX}Sourcing setup script: $(basename "$sh_file")"
-            source "$sh_file"
+            (source "$sh_file")
         fi
     done
     REQUIRED_VARS_RAW=$(grep -oE '\$\{[a-zA-Z0-9_]+\}' "$stack_dir"/*.y{ml,aml} 2>/dev/null)

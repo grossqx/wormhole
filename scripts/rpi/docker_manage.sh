@@ -57,7 +57,7 @@ function manage_stack() {
       sudo docker compose -f "$compose_file" config --"$action"
   elif echo "$supported_compose_commands" | grep -w -q "$action"; then
     echo "${PREFIX}Performing 'docker compose ${action}' for stack $stack_name"
-    if [[ $action == "up" || $action == "start" ]]; then
+    if [[ $action == "up" ]]; then
       sudo docker compose -f "$compose_file" "$action" -d
     else
       sudo docker compose -f "$compose_file" "$action"

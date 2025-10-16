@@ -1,13 +1,12 @@
 #!/bin/bash
 
-BACKUP_PATTERN_WILDCARD="backup_????????_??????_"
-
 function wh-generate-backup-basename() {
     local source_dir="$1"
     echo "backup_$(date +%Y%m%d_%H%M%S)_$(basename "$source_dir").tar.enc"
 }
 
 function wh-count-backups() {
+    local BACKUP_PATTERN_WILDCARD="backup_????????_??????_"
     local backup_dir="$1"
     local source_basename="$2"
     if [ -z "$backup_dir" ] || [ -z "$source_basename" ]; then
@@ -21,6 +20,7 @@ function wh-count-backups() {
 }
 
 function wh-get-latest-backup() {
+    local BACKUP_PATTERN_WILDCARD="backup_????????_??????_"
     local backup_dir="$1"
     local source_basename="$2"
     if [ -z "$backup_dir" ] || [ -z "$source_basename" ]; then
@@ -39,6 +39,7 @@ function wh-get-latest-backup() {
 }
 
 function wh-get-oldest-backup() {
+    local BACKUP_PATTERN_WILDCARD="backup_????????_??????_"
     local backup_dir="$1"
     local source_basename="$2"
     if [ -z "$backup_dir" ] || [ -z "$source_basename" ]; then

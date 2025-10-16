@@ -129,22 +129,18 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 # TODOs:
 
-wormhole tool
-- backup and restore
-    - run backup or restore over one or all docker stacks
-        - stop stack
-        - run backups/restores
-        - run stack
-- sync backup folder to other hosts
+docker setup:
+- DNS troubleshooting
 
 wormholed.sh
 - auto-updates
     - system updates (nfs, ssh, etc.)
     - wormhole updates
+- detect new drives as migration cadidates
 - help
 
-docker setup:
-- DNS troubleshooting
+wormhole tool
+- sync backup folder to other hosts
 
 server:
 - create api-keys and example config file from node-red if they are not present
@@ -157,6 +153,4 @@ wormholeinstalld.sh:
 wormhole-installer:
 - fix incorrect network interface being picked when pi is on both eth and wifi
 - mc theme setter fix
-
-refactoring:
-- duplicated variables
+- make inputs invisible for ssh password and wifi password when inputting from keyboard

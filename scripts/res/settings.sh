@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_version="0.1.37"
+script_version="0.1.39"
 
 # Encryption
 key_derivation="-pbkdf2"
