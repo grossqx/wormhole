@@ -22,7 +22,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 ACTION=$1
-shift # Shift arguments so $@ now contains the list of requested stacks
+shift
 REQUESTED_STACKS=("$@")
 
 list_local_mounts() {
@@ -50,15 +50,19 @@ function manage_stack() {
     echo "${PREFIX}Warning: No Docker Compose file (*compose.yaml/yml) found in '$search_dir'. Skipping ${action} for ${stack_name}."
     return
   fi
-  if echo "$supported_custom_commands" | grep -w -q "$action"; then
+  if echo "$commands_custom" | grep -w -q "$action"; then
     if [[ $action == "mounts" ]]; then
         source "${docker_dir}/environment.sh"
-        get_local_volumes "$compose_file"
+        list_local_mounts "$compose_file"
         return
     fi
-  elif echo "$supported_config_commands" | grep -w -q "$action"; then
-      sudo docker compose -f "$compose_file" config --"$action"
-  elif echo "$supported_compose_commands" | grep -w -q "$action"; then
+  elif echo "$commands_config" | grep -w -q "$action"; then
+      if [[ $action == "show" ]]; then
+        sudo docker compose -f "$compose_file" config
+      else
+        sudo docker compose -f "$compose_file" config --"$action"
+      fi
+  elif echo "$commands_compose" | grep -w -q "$action"; then
     echo "${PREFIX}Performing 'docker compose ${action}' for stack $stack_name"
     if [[ $action == "up" ]]; then
       sudo docker compose -f "$compose_file" "$action" -d
@@ -67,7 +71,7 @@ function manage_stack() {
     fi
   else
     echo "Error: unknown stack action: $action"
-    echo "Supported actions are: $supported_compose_commands ${supported_custom_commands}"
+    echo "Supported actions are: $commands_compose ${commands_custom}"
     exit 1
   fi
 }
@@ -75,7 +79,7 @@ function manage_stack() {
 # Find all potential stack directories in docker_stacks
 find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
     STACK_NAME=$(basename "$stack_dir")
-    if [[ $ACTION == "list" ]]; then
+    if [[ $ACTION == "list" || $ACTION == "ls" ]]; then
         echo "$STACK_NAME"
         continue
     fi
