@@ -1,23 +1,5 @@
 #!/bin/bash
 
-# ==============================================================================
-# This script updates WORMHOLE by downloading the latest
-# version and its checksum from the configured API endpoint.
-#
-# It performs the following steps:
-# 1. Verifies that the necessary environment variables, WH_HARDWARE_API_KEY,
-#    WH_SERVER_API_URL, WH_CRYPTO_KEY are set.
-# 2. Downloads the latest install script and a gzipped tar archive of the
-#    application.
-# 3. Downloads the SHA256 checksum from the server and validates the integrity
-#    of the downloaded archive.
-# 4. Extracts the contents of the archive and cleans up the temporary file.
-#
-# Prerequisites:
-# - The WH_HARDWARE_API_KEY and WH_SERVER_API_URL environment variables must be
-#   set in the user's environment.
-#
-# ==============================================================================
 if [ -z "$WH_HARDWARE_API_KEY" ] || [ -z "$WH_SERVER_API_URL" ] || [ -z "$WH_CRYPTO_KEY" ] || [ -z "$WH_CRYPTO_CIPHER" ] || [ -z "$WH_CRYPTO_DERIVATION" ]; then
     echo "Error: One of the environment variables (WH_HARDWARE_API_KEY, WH_SERVER_API_URL, WH_CRYPTO_KEY, WH_CRYPTO_CIPHER, WH_CRYPTO_DERIVATION) are missing." >&2
     exit 1
@@ -32,7 +14,7 @@ api_domain=${WH_SERVER_API_URL}
 distro_url="${WH_SERVER_API_URL}${endpoint_update}"
 sha_url="${distro_url}.sha256"
 
-echo "Updating the docker configuration from ${api_domain}..."
+echo "Updating wormhole's docker configuration from ${api_domain}"
 
 new_distro_dir=$(mktemp -d)
 trap 'rm -rf "$new_distro_dir"' EXIT
@@ -72,12 +54,11 @@ rm -f "${new_distro_tar_enc}"
 echo "Contents of temporary directory:"
 ls "${new_distro_dir}"
 
-echo "Copying contents from ${new_distro_dir} to ${docker_dir}..."
-
+echo "Copying new contents to ${docker_dir}..."
 cp -r "${new_distro_dir}/." "${docker_dir}"
 if [[ $? -ne 0 ]]; then
     echo "Error when copying files to ${docker_dir}"
     exit 1
 fi
 
-echo -e "Update complete"
+echo -e "Success. wormhole's docker configuration updated."
