@@ -1,9 +1,9 @@
 #!/bin/bash
 
 PREFIX="[docker manage] "
-supported_compose_commands="up down pull create ps logs ls stats start stop restart kill"
-supported_config_commands="services images networks volumes"
-supported_custom_commands="list mounts"
+commands_compose="up down pull create ps logs ls stats start stop restart kill"
+commands_config="show services images networks volumes"
+commands_custom="list mounts"
 
 if [ -z "$docker_stacks" ]; then
     echo "Error: docker_stacks is not set. Exiting."
@@ -12,9 +12,12 @@ fi
 
 # Check if at least one argument is provided
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 <${supported_compose_commands} ${supported_config_commands} ${supported_custom_commands}> [stack1] [stack2]..."
+  echo "Usage: $0 <command> [stack1] [stack2]..."
   echo "  - The action to perform on the stacks."
   echo "  - Optional list of specific stacks to process."
+  echo "  docker compose commands: ${commands_compose}"
+  echo "  docker compose config options: ${commands_config}"
+  echo "  other commands: ${commands_custom}"
   exit 1
 fi
 
@@ -22,9 +25,9 @@ ACTION=$1
 shift # Shift arguments so $@ now contains the list of requested stacks
 REQUESTED_STACKS=("$@")
 
-get_local_volumes() {
+list_local_mounts() {
     local compose_file=$1
-    local yq_query=".services[].volumes[] | select(.type == \"bind\") | .source"
+    local yq_query=".services[].volumes[]? | select(.type == \"bind\") | .source"
     sudo docker compose -f "$compose_file" config | \
         yq "$yq_query" | \
         sort -u
