@@ -168,3 +168,12 @@ wormhole-installer:
 - fix incorrect network interface being picked when pi is on both eth and wifi
 - mc theme setter fix
 - make inputs invisible for ssh password and wifi password when inputting from keyboard
+
+## Licenses for other components
+- Node-RED [Apache 2.0](https://github.com/node-red/node-red/blob/master/LICENSE)
+- rpi-clone [BSD 3-Clause](https://github.com/geerlingguy/rpi-clone/blob/master/LICENSE)
+- rpi-imager [LGPL v3](https://github.com/raspberrypi/rpi-imager/blob/main/license.txt)
+- Docker: [Apache 2.0](https://github.com/docker/docker/blob/master/LICENSE)
+- WireGuard [GPL v2](https://www.wireguard.com/#license)
+- Pi-hole [EUPL v1.2](https://github.com/pi-hole/pi-hole/blob/master/LICENSE)
+- Unbound: [BSD License](https://unbound.nlnetlabs.nl/svn/trunk/LICENSE)
