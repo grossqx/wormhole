@@ -3,60 +3,53 @@ VPN server installer for Raspberry Pi.
 
 ## 1. Client
 
-The installer itself. Uses official Raspberry Pi imager **rpi-imager** tool to download and write the OS iso to your media. Simplifies configuration for the client by moving most of the decision making to the owner of the API server. Runs in CLI.
+**wormhole-installer** bash script uses official Raspberry Pi **rpi-imager** tool to download and write the OS image to your media. Runs in CLI. 
+Simplifies installation by moving most of the decision making to the admin of wormhole **server**. Pulls pre-made user-specific configurations from the **server**. Utilizes *image customization* feature to pack the **wormhole** configuration, scripts and services into *firstrun.sh*. Provides the client with router configuration insructions.
+Displays progress and a realtime log of the **wormhole** installer finalizing setup on the **node** itself after it was powered on.
 
 ### Hardware: 
 
-Linux machine with a SD-card-reader. or SATA/NVMe reader. Can be the same computer as the server.
+Linux machine with a SD-card-reader. or SATA/NVMe reader. *Can also be the same computer as the server.*
 
-### Software: 
-
-**wormhole-installer** bash script
 
 ## 2. Server
-- Serves configurations to the installer clients
-- Monitors the intallation process
-- Monitors existing Raspberry Pi nodes
 
-### Hardware:
+Powered by **Node-RED** and defined by a single *flow.json* file.
 
-Anything that runs docker
-
-### Software:
-
-**Node-RED** flow
-
+- Authentication for **clients** and **nodes**
+- Defines and serves **node configurations** to the installer **clients**
+- Serves configuration updates to the live **nodes**
+- Monitors system state of existing Raspberry Pi **nodes**
+- Handles logging
 
 ## 3. Node
-- Runs the Wireguard VPN server and other services as docker containers
-- Reports to the server
+
+**wormhole** - Management Utility bash script. Handles administrative functions and provides commands to manually manage docker stacks and environment, backups, updates, migration and configuration changes.
+
+**wormholeinstalld.service** - Installs everything else and disables itself in the end. Logs the installation process to both client and server.
+
+**wormholed.service** - Main background daemon. Handles telemetry reporting to the server and manages routine checks on every reboot.
 
 ### Hardware: 
 
-**Raspberry Pi**
+**Raspberry Pi** 
 
-Tested on RPi 4B
+*Tested on: Raspberry Pi 4B*
 
-### Software:
-
-- **wormholed.service** systemd service
-
-- **wormholeinstallerd.service** systemd service - Installs everything else and disables itself in the end. Logs the installation process to both client and server.
-
-- Docker stacks and containers: 
-    - vpn
-        - pihole
-        - unbound
-        - wireguard
-    - network:
-        - NGINX Proxy Manager
-    - supervisor:
-        - dockge
-        - uptime kuma
-    - iot
-        - nodered
-    - storage
-        - syncthing
+### Docker stacks and services:
+- vpn
+    - pihole
+    - unbound
+    - wireguard
+- network:
+    - NGINX Proxy Manager
+- supervisor:
+    - dockge
+    - uptime kuma
+- iot
+    - nodered
+- storage
+    - syncthing
 
 # Installation
 
@@ -143,15 +136,12 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 # TODOs:
 
-docker setup:
-- save backups before reinstall
+wormhole tool
+- sync backup folder to other hosts
 
 wormholed.sh
 - auto-updates
 - detect new drives as migration cadidates
-
-wormhole tool
-- sync backup folder to other hosts
 
 server:
 - create api-keys and example config file from node-red if they are not present
@@ -166,9 +156,15 @@ wormhole-installer:
 - mc theme setter fix
 - make inputs invisible for ssh password and wifi password when inputting from keyboard
 
+# Issues:
+
+Feel free to open an issue if you found a bug or have an improvement suggestion.
+## Known upsteam issues:
+[[BUG]: rpi-imager ignores settings in firstrun.sh when writing to nvme](https://github.com/raspberrypi/rpi-imager/issues/1165)
+
 # Acknowledgments
 
-Server running on [Node-RED](https://github.com/node-red/node-red).
+Server running on [Node-RED](https://github.com/node-red/node-red-docker).
 
 Docker-compose project for the node is based on [wirehole](https://github.com/IAmStoxe/wirehole) project. Main functionality provided by:
 - [WireGuard](https://www.wireguard.com/) (image [linuxserver/wireguard](https://docs.linuxserver.io/images/docker-wireguard/))
@@ -177,14 +173,14 @@ Docker-compose project for the node is based on [wirehole](https://github.com/IA
 
 Installer makes use of the official [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager).
 
-Migration powered by [rpi-clone](https://github.com/geerlingguy/rpi-clone/security).
+Migration powered by [rpi-clone](https://github.com/geerlingguy/rpi-clone).
 
 
-## Licenses for other components
-- Node-RED [Apache 2.0](https://github.com/node-red/node-red/blob/master/LICENSE)
-- rpi-clone [BSD 3-Clause](https://github.com/geerlingguy/rpi-clone/blob/master/LICENSE)
+# Licenses for other components
+- Node-RED   [Apache 2.0](https://github.com/node-red/node-red/blob/master/LICENSE)
+- rpi-clone  [BSD 3-Clause](https://github.com/geerlingguy/rpi-clone/blob/master/LICENSE)
 - rpi-imager [LGPL v3](https://github.com/raspberrypi/rpi-imager/blob/main/license.txt)
-- Docker: [Apache 2.0](https://github.com/docker/docker/blob/master/LICENSE)
-- WireGuard [GPL v2](https://www.wireguard.com/#license)
-- Pi-hole [EUPL v1.2](https://github.com/pi-hole/pi-hole/blob/master/LICENSE)
-- Unbound: [BSD License](https://unbound.nlnetlabs.nl/svn/trunk/LICENSE)
+- Docker:    [Apache 2.0](https://github.com/docker/docker/blob/master/LICENSE)
+- WireGuard  [GPL v2](https://www.wireguard.com/#license)
+- Pi-hole    [EUPL v1.2](https://github.com/pi-hole/pi-hole/blob/master/LICENSE)
+- Unbound:   [BSD License](https://unbound.nlnetlabs.nl/svn/trunk/LICENSE)
