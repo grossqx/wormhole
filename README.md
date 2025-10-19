@@ -98,14 +98,28 @@ wormhole-installer --help
 ### Server:
 
 1. Clone the repository.
-2. Spin up a [Node-RED container](https://nodered.org/docs/getting-started/docker)
+
+2. Get a running Node-RED instance. If you already have Node-RED, you can skip this step.
+
+    Recommended way is as a [docker compose](https://docs.docker.com/compose/) project. You can follow the instuctions [here](https://github.com/node-red/node-red-docker/blob/master/README.md) or use this repo's provided docker-compose  file.
+
 3. Add the Wormhole flow to Node-RED instance
-4. Set up environment variables in the flow.
+    
+
+    Hamburger menu -> Import -> Paste flow json or select and import the provided file
+
+4. Customize environment variables in the flow.
+
+    To get to the environment variable editor in Node-RED GUI, double-click the flow's tab name -> Environment Variables (button).
+    
+    Alternatively, environment variables can be edited in the flow itself json before importing it. They are in the 'env' section.
+
 5. Deploy the flow.
 
 ### Node:
-1. Power on
-2. Wait
+1. Connect the storage device with an image written by the **wormhole-installer** to the Raspberry Pi. 
+2. If Rapsbery Pi was previously configured to boot from a different device type, physically disconnect those storage devices or change the boot order beforehand. They can be reconnected once the installer on the Pi passes the first stage.
+3. Wait
 
 # Uninstallation
 
