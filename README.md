@@ -144,14 +144,11 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 # TODOs:
 
 docker setup:
-- DNS troubleshooting
+- save backups before reinstall
 
 wormholed.sh
 - auto-updates
-    - system updates (nfs, ssh, etc.)
-    - wormhole updates
 - detect new drives as migration cadidates
-- help
 
 wormhole tool
 - sync backup folder to other hosts

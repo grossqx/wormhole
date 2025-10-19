@@ -16,6 +16,37 @@ base_dir="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 function show_help(){
     echo "Wormhole ${version}"
+    echo
+    echo "Usage: ${binary_name} <command> [arguments]"
+    echo
+    echo "Wormhole Management Utility - A script for maintenance, migration, and Docker stack handling."
+    echo
+    echo "Primary Commands:"
+    echo "  -h, --help                 Show this help message."
+    echo "  -v, --version              Show version information."
+    echo
+    echo "Maintenance & Lifecycle:"
+    echo "  -u, update                 Updates the Wormhole manager script itself from the server."
+    echo "  -su, system-update         Run a system and service update (runs ${base_dir}/system_update.sh)."
+    echo "  -m, migrate                Run the system migration script (runs ${base_dir}/migration.sh)."
+    echo "  -cm, check-migration-plans Check for and execute any pending migration order scripts."
+    echo "  -c, config <key> <value>   Update a specific ${binary_name} configuration key."
+    echo
+    echo "Docker Stack Management:"
+    echo "  -s, stack <command> [stack]  Manage Docker stacks (runs ${base_dir}/docker_manage.sh)."
+    echo "                             Note: If [stack] is omitted, the command runs on ALL stacks."
+    echo "                             Example: ${binary_name} stack up my_stack"
+    echo "                             Command 'mounts' lists unique stack mounts/volumes."
+    echo
+    echo "Docker Operations (Updates, Backups, Restores):"
+    echo "  -d, docker <sub-command> [stack] Perform complex Docker operations."
+    echo "    Sub-commands:"
+    echo "      -u, update             Update both Docker configurations and environment files."
+    echo "      -ue, update-env        Update only the Docker environment file."
+    echo "      -b, backup [stack]     Stop, backup data volumes, and restart a specific stack."
+    echo "      -r, restore [stack]    Stop, restore data volumes, and restart a specific stack (volume replacement)."
+    echo "      -fr, full-restore [stack] Down, recreate, restore volumes, and start a specific stack (full rebuild)."
+    echo
 }
 
 function run_migration_order(){
@@ -154,56 +185,68 @@ case $command in
         show_help
         exit 0
         ;;
-    update)
+    -u|update)
         ${base_dir}/update.sh
         exit 0
         ;;
-    migrate)
+    -su|system-update)
+        ${base_dir}/system_update.sh
+        exit 0
+        ;;
+    -m|migrate)
         ${base_dir}/migration.sh
         exit 0
         ;;
-    check-migration-plans)
+    -cm|check-migration-plans)
         check_migration_plans
         ;;
-    docker)
+    -s|stack)
         shift
-        docker_command="$1"
-        if [[ $docker_command == 'update' ]]; then
-            ${base_dir}/docker_update_config.sh
-            [ $? -ne 0 ] && exit 1
-            ${base_dir}/docker_update_env.sh
-        elif [[ $docker_command == 'update-env' ]]; then
-            ${base_dir}/docker_update_env.sh
-        elif [[ $docker_command == 'stack' ]]; then
-            shift
-            if [[ $1 == "mounts" ]]; then
-                ${base_dir}/docker_manage.sh $@ | sort -u
-            else
-                ${base_dir}/docker_manage.sh $@
-            fi
-        elif [[ $docker_command == 'backup' ]]; then
-            shift
-            ${base_dir}/docker_manage.sh stop $@
-            ${base_dir}/docker_backups.sh backup $@
-            ${base_dir}/docker_manage.sh start $@
-        elif [[ $docker_command == 'full-restore' ]]; then
-            shift
-            ${base_dir}/docker_manage.sh down $@
-            ${base_dir}/docker_manage.sh create $@
-            ${base_dir}/docker_backups.sh restore $@
-            ${base_dir}/docker_manage.sh start $@
-        elif [[ $docker_command == 'restore' ]]; then
-            shift
-            ${base_dir}/docker_manage.sh stop $@
-            ${base_dir}/docker_backups.sh restore $@
-            ${base_dir}/docker_manage.sh start $@
+        if [[ $1 == "mounts" ]]; then
+            ${base_dir}/docker_manage.sh $@ | sort -u
         else
-            echo "docker what?"
-            echo "Usage: $0 <update update-env stack>"
-            exit 0
+            ${base_dir}/docker_manage.sh $@
         fi
         ;;
-    config)
+    -d|docker)
+        shift
+        docker_command="$1"
+        case "$docker_command" in
+            -u|update)
+                ${base_dir}/docker_update_config.sh
+                [ $? -ne 0 ] && exit 1
+                ${base_dir}/docker_update_env.sh
+                ;;
+            -ue|update-env)
+                ${base_dir}/docker_update_env.sh
+                ;;
+            -b|backup)
+                shift
+                ${base_dir}/docker_manage.sh stop $@
+                ${base_dir}/docker_backups.sh backup $@
+                ${base_dir}/docker_manage.sh start $@
+                ;;
+            -fr|full-restore)
+                shift
+                ${base_dir}/docker_manage.sh down $@
+                ${base_dir}/docker_manage.sh create $@
+                ${base_dir}/docker_backups.sh restore $@
+                ${base_dir}/docker_manage.sh start $@
+                ;;
+            -r|restore)
+                shift
+                ${base_dir}/docker_manage.sh stop $@
+                ${base_dir}/docker_backups.sh restore $@
+                ${base_dir}/docker_manage.sh start $@
+                ;;
+            *)
+                echo "docker what?"
+                echo "Usage: $0 docker [-u|-ue|-b|-r|-fr] [stack_name]"
+                exit 1
+                ;;
+        esac
+        ;;
+    -c|config)
         ${base_dir}/config_update.sh "$2" "$3"
         ;;
     *)
