@@ -169,6 +169,20 @@ wormhole-installer:
 - mc theme setter fix
 - make inputs invisible for ssh password and wifi password when inputting from keyboard
 
+# Acknowledgments
+
+Server running on [Node-RED](https://github.com/node-red/node-red).
+
+Docker-compose project for the node is based on [wirehole](https://github.com/IAmStoxe/wirehole) project. Main functionality provided by:
+- [WireGuard](https://www.wireguard.com/) (image [linuxserver/wireguard](https://docs.linuxserver.io/images/docker-wireguard/))
+- [Unbound](https://unbound.nlnetlabs.nl/)
+- [Pi-hole](https://github.com/pi-hole/pi-hole)
+
+Installer makes use of the official [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager).
+
+Migration powered by [rpi-clone](https://github.com/geerlingguy/rpi-clone/security).
+
+
 ## Licenses for other components
 - Node-RED [Apache 2.0](https://github.com/node-red/node-red/blob/master/LICENSE)
 - rpi-clone [BSD 3-Clause](https://github.com/geerlingguy/rpi-clone/blob/master/LICENSE)
