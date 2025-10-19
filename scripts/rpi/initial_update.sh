@@ -1,11 +1,13 @@
 #!/bin/bash
 
+export DEBIAN_FRONTEND=noninteractive
+
 echo "Checking filesystem:"
 lsblk -f -o LABEL,PATH,NAME,FSAVAIL,FSUSED,FSTYPE,FSVER,VENDOR,MOUNTPOINTS,UUID
 echo
 
 echo "Checking updates:"
-sudo apt update
+sudo apt-get update
 echo
 
 echo "Upgradable apps:"
@@ -17,13 +19,13 @@ sudo apt-get -o Dpkg::Options::="--force-confnew" --assume-yes full-upgrade -y
 echo
 
 echo "Running apt autoremove:"
-sudo apt autoremove -y
+sudo apt-get autoremove -y
 
 echo "Before apt clean:"
 lsblk -f -o LABEL,PATH,NAME,FSAVAIL,FSUSED,FSTYPE,FSVER,VENDOR,MOUNTPOINTS,UUID
 echo
 
-sudo apt clean
+sudo apt-get clean
 
 echo "After apt clean:"
 lsblk -f -o LABEL,PATH,NAME,FSAVAIL,FSUSED,FSTYPE,FSVER,VENDOR,MOUNTPOINTS,UUID

@@ -3,20 +3,20 @@
 set -e
 export DEBIAN_FRONTEND=noninteractive
 
-echo "Starting automated security maintenance at $(date):"
+echo "Starting a regular package update at $(date):"
 
 echo "Running apt update..."
-apt update
+apt-get update
 
 echo "Running apt upgrade..."
 apt-get -o Dpkg::Options::="--force-confold" --assume-yes upgrade -y
 
 echo "Running apt autoremove and clean..."
-apt autoremove -y
-apt clean
+apt-get autoremove -y
+apt-get clean
 
 echo "Restarting services affected by upgrades (if any)..."
-needrestart -r a
+/usr/sbin/needrestart -r a
 
 echo "Checking for eeprom updates..."
 if rpi-eeprom-update | grep -q "UPDATE AVAILABLE"; then

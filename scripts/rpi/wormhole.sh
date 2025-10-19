@@ -31,6 +31,10 @@ function show_help(){
     echo "  -m, migrate                Run the system migration script (runs ${base_dir}/migration.sh)."
     echo "  -cm, check-migration-plans Check for and execute any pending migration order scripts."
     echo "  -c, config <key> <value>   Update a specific ${binary_name} configuration key."
+    echo "  -au, auto-update <system|self> <schedule>|disabled  Schedule or disable automatic updates."
+    echo "                             Schedule uses 5-field cron format (e.g., \"0 3 * * *\")."
+    echo "                             Example: ${binary_name} auto-update system \"0 3 * * *\""
+    echo "                             Example: ${binary_name} auto-update self disabled"
     echo
     echo "Docker Stack Management:"
     echo "  -s, stack <command> [stack]  Manage Docker stacks (runs ${base_dir}/docker_manage.sh)."
@@ -77,6 +81,67 @@ if [ -f ${migration_order} ]; then
 else
     wh_log "No migration orders to execute"
 fi
+}
+
+function manage_auto_update() {
+    local update_type="$1"
+    local schedule="$2"
+    local cron_file="/etc/cron.d/wh-updates"
+    local unique_id=""
+    local command_to_run=""
+    local check_line=""
+    if [[ "$update_type" == "system" ]]; then
+        unique_id="#WORMHOLE_SYSTEM_UPDATE_CRON#"
+        command_to_run="$base_dir/wormhole.sh -su"
+    elif [[ "$update_type" == "self" ]]; then
+        unique_id="#WORMHOLE_SELF_UPDATE_CRON#"
+        command_to_run="$base_dir/wormhole.sh -u"
+    else
+        wh_log "Error: Unknown update type '$update_type'. Use 'system' or 'self'."
+        return 1
+    fi
+    if [[ "$schedule" == "disabled" ]]; then
+        if sudo grep -q "$unique_id" "$cron_file" 2>/dev/null; then
+            sudo sed -i "/$unique_id/d" "$cron_file"
+            wh_log "Disabled $update_type auto-update. Rule removed from $cron_file."
+        else
+            wh_log "$update_type auto-update rule not found. Nothing to disable."
+        fi
+        if [[ -f "$cron_file" ]] && [[ -z "$(sudo egrep -v '(^#|^$)' "$cron_file")" ]]; then
+            sudo rm -f "$cron_file"
+            wh_log "$cron_file is now empty and has been removed."
+        fi
+        sudo systemctl restart cron 2>/dev/null
+        return 0
+    fi
+    check_line="$schedule root $command_to_run $unique_id"
+    local current_crontab_content=""
+    if [[ ! -f "$cron_file" ]]; then
+        wh_log "Creating new system cron file: $cron_file"
+        sudo touch "$cron_file" && sudo chmod 0644 "$cron_file" && sudo chown root:root "$cron_file"
+    else
+        current_crontab_content=$(sudo cat "$cron_file" 2>/dev/null | grep -v -F "$unique_id")
+    fi
+    local temp_file=$(mktemp)
+    echo -e "$current_crontab_content\n$check_line" | sudo tee "$temp_file" > /dev/null
+    local start_time=$(date '+%Y-%m-%d %H:%M:%S')
+    sudo mv "$temp_file" "$cron_file"
+    wh_log "Attempting to install cron rule and validate syntax..."
+    sudo systemctl restart cron 2>/dev/null 
+    sleep 2
+    if sudo journalctl -u cron --since "$start_time" --no-pager | grep -qE "ERROR|BAD.*wh-updates|Syntax error"; then
+        wh_log "Error: The schedule '$schedule' has a syntax error. Reverting."
+        sudo sed -i "/$unique_id/d" "$cron_file"
+        if [[ -f "$cron_file" ]] && [[ -z "$(sudo egrep -v '(^#|^$)' "$cron_file")" ]]; then
+            sudo rm -f "$cron_file"
+            wh_log "$cron_file is now empty and has been removed."
+        fi
+        sudo systemctl restart cron 2>/dev/null
+        return 1
+    fi
+    wh_log "Successfully set $update_type auto-update to schedule: '$schedule'"
+    wh_log "Cron command: $command_to_run"
+    return 0
 }
 
 # Files to be sourced
@@ -186,11 +251,17 @@ case $command in
         exit 0
         ;;
     -u|update)
+        wh_log "Starting wormhole update..."
         ${base_dir}/update.sh
+        wh_log "Completed wormhole update. exit status: $?"
         exit 0
         ;;
     -su|system-update)
-        ${base_dir}/system_update.sh
+        wh_log "Starting system update..."
+        ${base_dir}/system_update.sh 2>&1| while read -r line; do
+            wh_log "$line"
+        done
+        wh_log "Completed system update. exit status: ${PIPESTATUS[0]}"
         exit 0
         ;;
     -m|migrate)
@@ -213,31 +284,48 @@ case $command in
         docker_command="$1"
         case "$docker_command" in
             -u|update)
-                ${base_dir}/docker_update_config.sh
-                [ $? -ne 0 ] && exit 1
-                ${base_dir}/docker_update_env.sh
+                wh_log "Starting docker configuration update..."
+                ${base_dir}/docker_update_config.sh || exit 1
+                wh_log "Updating docker environment..."
+                ${base_dir}/docker_update_env.sh || exit 1
+                wh_log "Completed docker configuration update"
                 ;;
             -ue|update-env)
-                ${base_dir}/docker_update_env.sh
+                wh_log "Starting docker environment update..."
+                ${base_dir}/docker_update_env.sh || exit 1
+                wh_log "Completed docker environment update"
                 ;;
             -b|backup)
                 shift
-                ${base_dir}/docker_manage.sh stop $@
-                ${base_dir}/docker_backups.sh backup $@
-                ${base_dir}/docker_manage.sh start $@
+                wh_log "Starting docker backup..."
+                ${base_dir}/docker_manage.sh stop $@ || exit 1
+                wh_log "Backing up container volumes..."
+                ${base_dir}/docker_backups.sh backup $@ || exit 1
+                wh_log "Restarting containers..."
+                ${base_dir}/docker_manage.sh start $@ || exit 1
+                wh_log "Completed docker backup"
                 ;;
             -fr|full-restore)
                 shift
-                ${base_dir}/docker_manage.sh down $@
-                ${base_dir}/docker_manage.sh create $@
-                ${base_dir}/docker_backups.sh restore $@
-                ${base_dir}/docker_manage.sh start $@
+                wh_log "Starting full-restore process..."
+                ${base_dir}/docker_manage.sh down $@ || exit 1
+                wh_log "Creating containers for services..."
+                ${base_dir}/docker_manage.sh create $@ || exit 1
+                wh_log "Restoring container volumes..."
+                ${base_dir}/docker_backups.sh restore $@ || exit 1
+                wh_log "Starting docker containers..."
+                ${base_dir}/docker_manage.sh start $@ || exit 1
+                wh_log "Completed full-restore process"
                 ;;
             -r|restore)
                 shift
-                ${base_dir}/docker_manage.sh stop $@
-                ${base_dir}/docker_backups.sh restore $@
-                ${base_dir}/docker_manage.sh start $@
+                wh_log "Starting docker restore process..."
+                ${base_dir}/docker_manage.sh stop $@ || exit 1
+                wh_log "Restoring container volumes..."
+                ${base_dir}/docker_backups.sh restore $@ || exit 1
+                wh_log "Restarting containers..."
+                ${base_dir}/docker_manage.sh start $@ || exit 1
+                wh_log "Completed docker restore process"
                 ;;
             *)
                 echo "docker what?"
@@ -248,6 +336,20 @@ case $command in
         ;;
     -c|config)
         ${base_dir}/config_update.sh "$2" "$3"
+        [ $? -ne 0 ] && exit 1
+        wh_log "Configuration variable $2 was updated."
+        ;;
+    -au|auto-update)
+        shift
+        type="$1"
+        time_spec="$2"
+        if [[ -z "$type" || -z "$time_spec" ]]; then
+            echo "Usage: $0 auto-update <system|self> \"<cron_schedule>\"|disabled"
+            exit 1
+        fi
+        manage_auto_update "$type" "$time_spec" || exit 1
+        wh_log "Auto-update for $type was set to '$time_spec'"
+        exit 0
         ;;
     *)
         echo "Unknown command $command"

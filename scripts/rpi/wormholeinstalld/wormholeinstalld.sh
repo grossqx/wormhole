@@ -1,8 +1,8 @@
 #!/bin/bash
 
-package_list_dependency="bc jq yq"
+package_list_dependency="bc jq yq debconf-doc"
 
-package_list_additional="nmap mc"
+package_list_additional="fail2ban needrestart nmap mc"
 
 repositories_to_clone=(
     "https://github.com/geerlingguy/rpi-clone.git"
@@ -541,6 +541,8 @@ case $install_stage in
             current_task=$((current_task + 1))
             log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
         done
+        log_progress_state "Stage ${install_stage} / Enabling services"
+        systemctl enable fail2ban | log
         move_on_to_stage "4"
         ;;
     4)
@@ -555,15 +557,15 @@ case $install_stage in
         stage_progress=1.0
         log_progress_state "Stage ${install_stage} / Pulling docker images"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${WH_PATH}/wormhole.sh docker stack pull 2>&1 | while read -r line; do
-            if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting"; then
+        ${WH_PATH}/wormhole.sh stack pull 2>&1 | while read -r line; do
+            if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer"; then
                 echo "$line" | log
             fi
         done
         stage_progress=2.0
         log_progress_state "Stage ${install_stage} / Docker creating containers"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-        ${WH_PATH}/wormhole.sh docker stack create 2>&1 | while read -r line; do
+        ${WH_PATH}/wormhole.sh stack create 2>&1 | while read -r line; do
             echo "$line" | log
         done
         move_on_to_stage "5"

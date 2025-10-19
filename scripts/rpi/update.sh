@@ -18,6 +18,7 @@
 #   variables must be set in the user's environment.
 #
 # ==============================================================================
+set -e
 
 if [ -z "$WH_HARDWARE_API_KEY" ] || [ -z "$WH_SERVER_API_URL" ] || [ -z "$WH_CRYPTO_KEY" ] || [ -z "$WH_CRYPTO_CIPHER" ] || [ -z "$WH_CRYPTO_DERIVATION" ]; then
     echo "Error: One of the environment variables (WH_HARDWARE_API_KEY, WH_SERVER_API_URL, WH_CRYPTO_KEY, WH_CRYPTO_CIPHER, WH_CRYPTO_DERIVATION) are missing." >&2

@@ -2,7 +2,7 @@
 
 function wh-generate-backup-basename() {
     local source_dir="$1"
-    echo "backup_$(date +%Y%m%d_%H%M%S)_$(basename "$source_dir").tar.enc"
+    echo "backup_$(date +%Y%m%d_%H%M%S)_$(basename "$source_dir")"
 }
 
 function wh-count-backups() {
@@ -103,7 +103,7 @@ function wh-backup() {
         echo "Error: Output directory '$output_dir' does not exist." >&2
         return 1
     fi
-    backup_filename="${output_dir}/$(wh-generate-backup-basename "$source_dir")"
+    backup_filename="${output_dir}/$(wh-generate-backup-basename "$source_dir").tar.enc"
     echo "Starting backup of '$source_dir' to '$backup_filename'"
     (
         cd "$source_dir" || { echo "Error: Cannot change to source directory $source_dir" >&2; return 1; }
