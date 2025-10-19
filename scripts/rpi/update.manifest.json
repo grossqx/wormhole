@@ -40,6 +40,10 @@
             "source": "/rpi/update.sh",
             "path": "${WH_PATH}/update.sh"
         },
+        "system_update": {
+            "source": "/rpi/system_update.sh",
+            "path": "${WH_PATH}/system_update.sh"
+        },
         "docker_install": {
             "source": "/rpi/docker_install.sh",
             "path": "${WH_PATH}/installer/docker_install.sh"

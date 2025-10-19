@@ -213,6 +213,7 @@ systemctl enable "${service_file_name}" | log
 echo "[6/17] Extracting wormhole main scripts..." | log
 extract_file "wormhole" 2>&1 | log
 extract_file "update" 2>&1 | log
+extract_file "system_update" 2>&1 | log
 extract_file "config_update" 2>&1 | log
 
 echo "[7/17] Creating a symlink at ${symlink_path}." | log
