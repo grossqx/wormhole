@@ -3,7 +3,7 @@
 export DEBIAN_FRONTEND=noninteractive
 
 echo "Checking filesystem:"
-lsblk -f -o LABEL,PATH,NAME,FSAVAIL,FSUSED,FSTYPE,FSVER,VENDOR,MOUNTPOINTS,UUID
+lsblk -f -o LABEL,PATH,FSAVAIL,FSUSED,FSTYPE,VENDOR,MOUNTPOINTS | grep /dev/
 echo
 
 echo "Checking updates:"

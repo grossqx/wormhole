@@ -12,7 +12,7 @@ fi
 
 # Check if at least one argument is provided
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 <command> [stack1] [stack2]..."
+  echo "Usage: <command> [stack1] [stack2]..."
   echo "  - The action to perform on the stacks."
   echo "  - Optional list of specific stacks to process."
   echo "  docker compose commands: ${commands_compose}"
@@ -47,7 +47,7 @@ function manage_stack() {
       fi
   done
   if [ -z "$compose_file" ]; then
-    echo "${PREFIX}Warning: No Docker Compose file (*compose.yaml/yml) found in '$search_dir'. Skipping ${action} for ${stack_name}."
+    echo "Error: No Docker Compose file (*compose.yaml/yml) found in '$search_dir'. Skipping ${action} for '${stack_name}'."
     return
   fi
   if echo "$commands_custom" | grep -w -q "$action"; then
@@ -63,14 +63,14 @@ function manage_stack() {
         sudo docker compose -f "$compose_file" config --"$action"
       fi
   elif echo "$commands_compose" | grep -w -q "$action"; then
-    echo "${PREFIX}Performing 'docker compose ${action}' for stack $stack_name"
+    echo "Running 'docker compose ${action}' for stack '${stack_name}'"
     if [[ $action == "up" ]]; then
       sudo docker compose -f "$compose_file" "$action" -d
     else
       sudo docker compose -f "$compose_file" "$action"
     fi
   else
-    echo "Error: unknown stack action: $action"
+    echo "Error: unknown stack action: '$action'"
     echo "Supported actions are: $commands_compose ${commands_custom}"
     exit 1
   fi

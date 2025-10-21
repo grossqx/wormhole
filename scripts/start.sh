@@ -916,7 +916,7 @@ if (( CHECKPOINT < 9)); then
         IMAGE_WRITTEN=true
         set_checkpoint 9
         send_report "Image successfully written to client's media. Instructed the client to power on the device."
-        echo -e "${T_GREEN}OS image written to ${INSTALL_DEVICE}\nIt is safe to remove now.${T_NC}"
+        echo -e "${T_GREEN}OS image written to ${INSTALL_DEVICE}\nIt is safe to disconnect now.${T_NC}"
         get_user_input -e "${T_BOLD}Please insert the media into Raspberry Pi and power it on. If you are using a wired network connection, also connect the Ethernet cable${T_NC}"
         get_user_input -e "${T_YELLOW}Press if the Raspberry Pi is powered on and expected to be accessible on the network.${T_NC}"
         send_report "Client confirmed powering on the device"
@@ -1208,6 +1208,7 @@ if (( CHECKPOINT < 14)); then
             elif echo "$response" | grep -q "${marker_state}"; then
                 log_state=$(echo "${log_line}" | grep -oP "(?<=${marker_state}).*?(?=${marker_close})")
                 current_log_line=$((current_log_line + received_lines))
+                last_update_time=0
             elif echo "$response" | grep -q "${marker_progress}"; then
                 progress=$(echo "${log_line}" | grep -oP "(?<=${marker_progress}).*?(?=${marker_close})")
                 if [[ -n "$progress" ]] && [[ "$progress" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
@@ -1220,6 +1221,7 @@ if (( CHECKPOINT < 14)); then
                     send_report "Irregular progress value received ${progress}"
                 fi
                 current_log_line=$((current_log_line + 1))
+                last_update_time=0
             elif echo "$response" | grep -q "${marker_fin}"; then
                 printf "\033[K${T_GREEN}${output_prefix}%s${T_NC}\n" "Log complete"
                 send_report "Finished streaming the log"

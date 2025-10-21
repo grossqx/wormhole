@@ -33,7 +33,7 @@ function extract_embedded_file_simple() {
     mkdir -p "$(dirname "$file_path")"
     sed -n "$(($start_line + 1)),$(($end_line - 1))p" "$0" > "$file_path"
     chmod +x "${file_path}"
-    echo "Extracted ${name} to ${file_path}"
+    echo "Extracted '${file_path}'"
 }
 ## ===============================================================================================================
 
@@ -128,8 +128,8 @@ set +e
 ## pwd will return "/"
 ## $HOME will return an empty string
 ## ===============================================================================================================
-journalctl -b | grep -E "systemd.run|CRON" | while read -r line; do
-    echo "[boot 1] $line" | log
+journalctl -b | grep -E "systemd.run" | while read -r line; do
+    echo "[first boot] $line" | log
 done
 echo "[1/17] firstrun.sh Starting" | log
 echo "Backed up to ${firstrun_backup}" | log
@@ -169,16 +169,12 @@ EOF
 ## [WH] Exporting embedded scripts
 ## ===============================================================================================================
 echo "[3/17] Extracting embedded scripts" | log
-echo "Sourcing embed_extract_files.sh..." | log
 extract_embedded_file_simple "embed_extract_files" 2>&1 | log
 source "${installer_dir}/embed_extract_files.sh" >/dev/null 2>&1
 
+extract_file "read_install_progress" 2>&1 | log
 extract_file "report_install_progress" 2>&1 | log
 install_log_script=$(get_file_unpack_path "$0" "report_install_progress" 2> >(log))
-
-echo "Extracting: read_install_progress.sh" | log
-extract_file "read_install_progress" 2>&1 | log
-ls "${installer_dir}" 2>&1 | log
 
 echo "[4/17] Extracting wormhole libraries..." | log
 extract_file "rpi_sysinfo" 2>&1 | log
@@ -192,19 +188,13 @@ service_file_name="wormholed.service"
 echo "Installing ${service_file_name}..." | log
 service_exec_file=$(get_file_unpack_path "$0" "wormholed" 2> >(log))
 service_unit_file=$(get_file_unpack_path "$0" "wormholed-service" 2> >(log))
-echo "exec path ${service_exec_file}" | log
-echo "unit path ${service_unit_file}" | log
 extract_file "wormholed" 2>&1 | log
 extract_systemd_service "wormholed-service" "${service_exec_file}" "${service_unit_file}" 2>&1 | log
-echo "Enabling ${service_file_name}" | log
-systemctl enable "${service_file_name}" | log
 
 service_file_name="wormholeinstalld.service"
 echo "Installing ${service_file_name}..." | log
 service_exec_file=$(get_file_unpack_path "$0" "wormholeinstalld" 2> >(log))
 service_unit_file=$(get_file_unpack_path "$0" "wormholeinstalld-service" 2> >(log))
-echo "exec path ${service_exec_file}" | log
-echo "unit path ${service_unit_file}" | log
 extract_file "wormholeinstalld" 2>&1 | log
 extract_systemd_service "wormholeinstalld-service" "${service_exec_file}" "${service_unit_file}" 2>&1 | log
 echo "Enabling ${service_file_name}" | log
@@ -245,8 +235,7 @@ extract_file "mc_set_theme" 2>&1 | log
 echo "[9/17] Setting hostname" | log
 sudo hostnamectl set-hostname "${HOSTNAME}" | log
 sudo sed -i "s/127.0.1.1.*$/127.0.1.1\t\t${HOSTNAME}/" "/etc/hosts" | log
-echo "---/etc/hosts:" | log
-cat /etc/hosts | log
+cat /etc/hosts | grep "${HOSTNAME}" | log
 ## ===============================================================================================================
 
 
@@ -257,8 +246,8 @@ echo "[10/17] Setting ssh port" | log
 sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 echo "Configuration backed up to /etc/ssh/sshd_config.bak" | log
 sudo sed -i "s/#Port 22/Port ${SSH_PORT}/" /etc/ssh/sshd_config
-cat /etc/ssh/sshd_config | grep 'Port ' | log
 systemctl enable ssh
+echo "ssh enabled - $(cat /etc/ssh/sshd_config | grep 'Port ')" | log
 ## ===============================================================================================================
 
 
@@ -346,10 +335,10 @@ echo "Wifi SSID set to ${WIFI_SSID}. Password set to <hidden>" | log
 ## ===============================================================================================================
 ## [WH] Get baseline system info
 ## ===============================================================================================================
-echo "Starting system information" | log
+echo "Starting system information:" | log
 source "$rpi_sysinfo_script"
 rpi-sysinfo | while read -r line; do
-    echo "[rpi-sysinfo] $line" | log
+    echo "$line" | log
 done
 ## ===============================================================================================================
 

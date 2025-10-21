@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Define the path to the rpi-clone git repository
 rpiclone_repo="${WH_PATH}/repos/rpi-clone"
 plan="${WH_HOME}/migration_order.sh"
 storage_functions="/etc/profile.d/wh_storage.sh"
@@ -11,7 +10,7 @@ function missing_device(){
     local device_name="$1"
     local device_rule="$2"
     echo "Error: $device_name boot device missing and expected by the configuration (${device_rule})"
-    echo "Please reconfigure expected boot devices or connect the storage and reboot."
+    echo "Please connect the storage device and reboot or reconfigure expected boot devices."
 }
 
 function schedule_migration(){
@@ -102,13 +101,13 @@ boot_current=""
 if [ ! -z "$WH_BOOT_DEVICE" ]; then
     resolved_device=$(wh-storage-resolve "$WH_BOOT_DEVICE")
     wh_resolve_status=$?
-    echo "Primary boot device is set to ${WH_BOOT_DEVICE}"
+    echo "Primary boot device is configured as ${WH_BOOT_DEVICE}"
     if [ $wh_resolve_status -eq 0 ]; then
-        echo " - assigned ${resolved_device}"
+        echo "Assigned device ${resolved_device}:"
         lsblk ${resolved_device}
         boot_primary_found=1
         if echo "$current_boot_path" | grep -q "$resolved_device"; then
-            echo "Currently booted from the Primary device: ${resolved_device}"
+            echo "Currently booted from the primary device: ${resolved_device}"
             boot_current="primary"
         fi
     else
@@ -120,13 +119,13 @@ fi
 if [ ! -z "$WH_BOOT_DEVICE2" ]; then
     resolved_device2=$(wh-storage-resolve "$WH_BOOT_DEVICE2")
     wh_resolve_status2=$?
-    echo "Secondary boot device is set to ${WH_BOOT_DEVICE2}"
+    echo "Secondary boot device is configured as ${WH_BOOT_DEVICE2}"
     if [ $wh_resolve_status2 -eq 0 ]; then
-        echo " - assigned ${resolved_device2}"
+        echo "Assigned device ${resolved_device2}:"
         lsblk ${resolved_device2}
         boot_secondary_found=1
         if echo "$current_boot_path" | grep -q "$resolved_device2"; then
-            echo "Currently booted from the Secondary device: ${resolved_device2}"
+            echo "Currently booted from the secondary device: ${resolved_device2}"
             boot_current="secondary"
         fi
     else
@@ -148,24 +147,30 @@ if [[ $boot_current == "primary" ]]; then
             echo "Boot order not explicitly set"
             schedule_boot_order_change "${resolved_device}"
         fi
+    else
+        error_message="Secondary boot device '${WH_BOOT_DEVICE2}' not found."
     fi
 elif [[ $boot_current == "secondary" ]]; then
     if [[ $boot_primary_found -eq 1 ]]; then
         echo "Scheduling cloning from ${resolved_device2} (secondary) to ${resolved_device} (primary)"
         schedule_cloning "$resolved_device2" "$resolved_device"
         schedule_boot_order_change "${resolved_device}"
+    else
+        error_message="Primary boot device '${WH_BOOT_DEVICE}' not found."
     fi
 else
-    echo "Error: Migration not possible."
+    echo "Error: Migration not possible. Currently booted from neither primary nor the secondary configured boot device."
     exit 1
 fi
 
-echo -e "\n"
+if [ ! -f "$plan" ]; then
+    echo "$error_message - migration canceled."
+    exit 1
+fi
+
 echo "------ Migration plan created: --------"
 cat $plan
 echo "---------------------------------------"
-echo -e "\n"
 echo "Plan will be automatically run by wormholed.service on next boot"
 echo "To cancel the migration: sudo rm $plan"
-echo -e "\n"
 echo "[6/${total_steps}] Migration script complete"

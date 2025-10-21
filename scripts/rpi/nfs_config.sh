@@ -18,15 +18,16 @@ EXPORT_OPTIONS=$4
 EXPORT_DIR="${EXPORT_BASE}/${EXPORT_NAME}"
 
 install_nfs_packages() {
+    export DEBIAN_FRONTEND=noninteractive
     echo "Installing NFS server (nfs-kernel-server) and client (nfs-common) packages..."
-    sudo apt update
-    if sudo apt install -y nfs-kernel-server nfs-common; then
+    sudo apt-get update
+    if sudo apt-get install -y nfs-kernel-server nfs-common; then
         echo "NFS packages installed successfully."
         sudo systemctl enable --now nfs-server
         echo "NFS server service started and enabled for boot."
         return 0
     else
-        echo "Error: apt installation failed."
+        echo "Error: apt-get installation failed."
         return 1
     fi
 }

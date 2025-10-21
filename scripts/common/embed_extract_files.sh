@@ -13,16 +13,14 @@
 #   - extract_systemd_service: Extracts, modifies, and installs an embedded systemd service file.
 #
 # Usage:
-#   1. Make the script executable:
-#      chmod +x your_script.sh
 #
-#   2. To embed a file into the script:
-#      source your_script.sh
-#      embed_file /path/to/source.zip archive.sh my_data /tmp/data
+#     To embed a file into the script:
+#     source your_script.sh
+#     embed_file /path/to/source.zip archive.sh my_data /tmp/data
 # 
-#   3. To extract an embedded file from the script:
-#      source your_script.sh
-#      extract_file my_data /tmp/data/extracted_data.config
+#     To extract an embedded file from the script:
+#     source your_script.sh
+#     extract_file my_data /tmp/data/extracted_data.config
 #
 #####################################################################################
 
@@ -164,7 +162,7 @@ function extract_embedded_file_simple() {
     mkdir -p "$(dirname "$file_path")"
     sed -n "$(($start_line + 1)),$(($end_line - 1))p" "$0" > "$file_path"
     chmod +x "${file_path}"
-    echo "Extracted ${name} to ${file_path}"
+    echo "Extracted '${file_path}'"
 }
 
 # This function retrieves the file path from the start marker for a given file name.
@@ -241,7 +239,7 @@ function extract_file() {
     fi
     sed -n "$(($start_line + 1)),$(($end_line - 1))p" "$source_script" > "$file_path"
     chmod +x ${file_path}
-    echo "Extracted an executable from '${source_script}' to '${file_path}'"
+    echo "Extracted '${file_path}'"
 }
 
 # This function extracts an embedded systemd service file (specified by name) from the installer,
@@ -303,5 +301,5 @@ function extract_systemd_service() {
         return 1
     fi
     rm -f "$temp_file"
-    echo "systemd service file extracted from '${source_script}' to '${systemd_service_path}' with exec '${exec_start_script}'"
+    echo "Extracted '${systemd_service_path}' exec '${exec_start_script}'"
 }

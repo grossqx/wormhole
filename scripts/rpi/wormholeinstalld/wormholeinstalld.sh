@@ -313,19 +313,19 @@ if [ $boot_number -eq 2 ]; then
     # Packages required for log function to work
     echo "${marker_state}Installing dependencies${marker_close}" | tee -a "${install_log_path}"
     echo "$message" | tee -a "${install_log_path}"
-    echo "[${wh_prefix}] Checking bash version" | tee -a "${install_log_path}"
-    bash --version | tee -a "${install_log_path}"
     echo "[${wh_prefix}] Installing dependencies for the installer: ${package_list_dependency}" | tee -a "${install_log_path}"
     apt-get install -y ${package_list_dependency} | while read -r line; do
         echo "$line" >> "${install_log_path}"
     done
     
-    # Restart main service
-    systemctl restart wormholed.service | log
-    systemctl status wormholed.service | log
+    echo "Enabling wormholed.service" | log
+    systemctl enable wormholed.service | log
+    systemctl start wormholed.service | log
+    echo "wormholed.service $(systemctl status wormholed.service | grep Status)" | log
 
     # Catch the server up to logs from previous boot
     log_progress_state "Checking firstrun log"
+    echo "Reading the log from the previous boot" | log
     cat "${install_log_path}" | while read -r line; do
         echo "$line" | log
         script_progress=$(parse_progress "$line")
@@ -336,16 +336,14 @@ if [ $boot_number -eq 2 ]; then
     done
     # Remove firstrun.sh log and firstrun.sh backup
     rm -f "$firstrun_log_path" "$firstrun_backup"
+
     # Real-time logging can start now
     log_progress_state "Stage ${install_stage} / Starting the installation"
-    echo "0" | log
-    echo "1." | log
-    echo "2.." | log
     echo "3..." | log
-    echo "4...." | log
-    echo "5....." | log
+    echo "2.." | log
+    echo "1." | log
     echo "Hello ${WH_INSTALL_USER}!" | log
-    echo "This is ${installer_name} from your $(hostname)" | log
+    echo "This is ${installer_name} live from your $(hostname)" | log
     echo "Raspberry Pi will reboot multiple times during installation. Setting boot priority to the current boot media." | log
     ${WH_PATH}/set_boot_order.sh -current | log
 else
@@ -380,7 +378,7 @@ if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
 else
     preflight_checks_passed=false
     preflight_errors="${preflight_errors}Failed to authenticate with the server;"
-    echo "[${wh_prefix}] Device's hardware API key not recognized my the server yet. Waiting for configuration to be uploaded by the installer." | log
+    echo "[${wh_prefix}] Hardware API key not recognized by the server yet. Waiting for configuration to be uploaded by the installer client." | log
 fi
 
 # Pass checks before installation continues
@@ -425,7 +423,6 @@ case $install_stage in
         declare -i total_tasks=0
         declare -i current_task=0
         ${WH_PATH}/installer/initial_update.sh | while read -r line; do
-            echo "$line" | log
             if [[ $total_packages -eq 0 ]]; then # Get the total number of packages and calculate total tasks.
                 if echo "$line" | grep -qP '\d+ upgraded, \d+ newly installed, \d+ to remove'; then
                     upgraded_packages=$(echo "$line" | grep -oP '\d+(?= upgraded)')
@@ -447,6 +444,8 @@ case $install_stage in
                     current_task=$((current_task + 1))
                     log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
                 fi
+            else
+                echo "$line" | log
             fi
         done
         move_on_to_stage "2"
@@ -490,7 +489,6 @@ case $install_stage in
             apt list $item | log
         done
         sudo apt-get install -y ${package_list_additional} | while read -r line; do
-            echo "$line" | log
             if [[ $total_packages -eq 0 ]]; then # Get the total number of packages and calculate total tasks.
                 if echo "$line" | grep -qP '\d+ upgraded, \d+ newly installed, \d+ to remove'; then
                     upgraded_packages=$(echo "$line" | grep -oP '\d+(?= upgraded)')
@@ -512,6 +510,8 @@ case $install_stage in
                     current_task=$((current_task + 1))
                     log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
                 fi
+            else
+                echo "$line" | log
             fi
         done
         current_task=$((number_of_repositories + number_of_third_party_scripts))

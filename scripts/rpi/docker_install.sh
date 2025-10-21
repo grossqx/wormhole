@@ -44,6 +44,7 @@ for user in $(getent passwd | awk -F: '$3 >= 1000 && $3 < 60000 {print $1}'); do
   groups $user
 done
 
+echo "Adding user 'wormhole' to the 'docker' group..."
 sudo usermod -aG docker "wormhole"
 groups wormhole
 
