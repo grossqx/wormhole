@@ -16,7 +16,6 @@ validate_config_file() {
         "RPI_DESCRIPTION"
         "RPI_CONFIG_TAG"
         "RPI_CONFIG_SEARCH"
-        "RPI_CONFIG_TIMEOUT"
         "RPI_TIMEZONE"
         "RPI_IP_ADDR"
         "RPI_DOMAIN"
@@ -37,11 +36,6 @@ validate_config_file() {
 
     if ! [[ "$RPI_HOSTNAME" =~ ^[a-zA-Z0-9-]+$ ]]; then
         echo -e "${T_RED}Error: Invalid hostname '${RPI_HOSTNAME}'. It should only contain alphanumeric characters and hyphens.${T_NC}" >&2
-        failed=1
-    fi
-
-    if ! [[ "$RPI_CONFIG_TIMEOUT" =~ ^[0-9]+s$ ]]; then
-        echo -e "${T_RED}Error: Invalid timeout value. It should be a positive integer followed by 's'.${T_NC}" >&2
         failed=1
     fi
 

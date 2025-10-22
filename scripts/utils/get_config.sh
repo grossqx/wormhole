@@ -12,7 +12,6 @@ required_variables=(
     "hostname"
     "device_tag"
     "search"
-    "safety_timeout"
     "timezone"
     "ip_addr"
     "domain"
@@ -145,7 +144,6 @@ hostname=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."hostname"')
 description=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."description"')
 device_tag=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."device-tag"')
 search=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."search"')
-safety_timeout=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."safety-timeout"')
 timezone=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."timezone"')
 ip_addr=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."ip-addr"')
 domain=$(echo "$json_data" | jq -r --arg key "$config" '.[$key]."domain"')
@@ -215,7 +213,13 @@ check_missing_variables
 missing_count=$?
 if [[ ${missing_count} -gt 0 ]]; then
     for missing_variable in "${missing_variables[@]}"; do
-        read -p "   Enter value for $missing_variable: " missing_value
+        prompt="   Enter value for $missing_variable: "
+        if [[ "${missing_variable,,}" == *password* ]]; then
+            read -s -p "$prompt" missing_value
+            echo
+        else
+            read -p "$prompt" missing_value
+        fi
         eval "$missing_variable=\"$missing_value\""
     done
 fi
@@ -228,7 +232,6 @@ echo "RPI_HOSTNAME='${hostname}'" >> ${CONFIG_PATH}
 echo "RPI_DESCRIPTION='${description}'" >> ${CONFIG_PATH}
 echo "RPI_CONFIG_TAG='${device_tag}'" >> ${CONFIG_PATH}
 echo "RPI_CONFIG_SEARCH='${search}'" >> ${CONFIG_PATH}
-echo "RPI_CONFIG_TIMEOUT='${safety_timeout}'" >> ${CONFIG_PATH}
 echo "RPI_TIMEZONE='${timezone}'" >> ${CONFIG_PATH}
 echo "RPI_IP_ADDR='${ip_addr}'" >> ${CONFIG_PATH}
 echo "RPI_DOMAIN='${domain}'" >> ${CONFIG_PATH}

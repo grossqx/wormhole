@@ -558,7 +558,7 @@ case $install_stage in
         log_progress_state "Stage ${install_stage} / Pulling docker images"
         log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh stack pull 2>&1 | while read -r line; do
-            if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer"; then
+            if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer\| Verifying Checksum\| Download complete\| Pull complete"; then
                 echo "$line" | log
             fi
         done

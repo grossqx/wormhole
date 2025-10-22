@@ -42,6 +42,47 @@ function main_loop(){
     wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
 }
 
+check_new_boot_devices() {
+    local WH_DISKS_FILE="${WH_HOME}/.disks"
+    local CURRENT_DISKS_TEMP=$(mktemp)
+    # trap "rm -f \"$CURRENT_DISKS_TEMP\"" EXIT HUP INT TERM
+    lsblk -d -n -o NAME 2>/dev/null > "$CURRENT_DISKS_TEMP"
+    if [ ! -f "$WH_DISKS_FILE" ]; then
+        echo "Disk state file not found. Creating baseline at $WH_DISKS_FILE."
+        mv "$CURRENT_DISKS_TEMP" "$WH_DISKS_FILE"
+        return 1
+    fi
+    if ! diff -q "$WH_DISKS_FILE" "$CURRENT_DISKS_TEMP" >/dev/null; then
+        NEW_DEVICES=$(grep -Fxv -f "$WH_DISKS_FILE" "$CURRENT_DISKS_TEMP")
+        if [ -n "$NEW_DEVICES" ]; then
+            echo "New devices detected:"
+            echo "$NEW_DEVICES" | while IFS= read -r device_name; do
+                device_path="/dev/$device_name"
+                echo "$device_path"
+            done
+            mv "$CURRENT_DISKS_TEMP" "$WH_DISKS_FILE"
+            return 0
+        fi
+
+        DISCONNECTED_DEVICES=$(grep -Fxv -f "$CURRENT_DISKS_TEMP" "$WH_DISKS_FILE")
+        if [ -n "$DISCONNECTED_DEVICES" ]; then
+            echo "Disconnected devices:"
+            echo "$DISCONNECTED_DEVICES" | while IFS= read -r device_name; do
+                device_path="/dev/$device_name"
+                echo "$device_path"
+            done
+            mv "$CURRENT_DISKS_TEMP" "$WH_DISKS_FILE"
+            return 1
+        fi
+        mv "$CURRENT_DISKS_TEMP" "$WH_DISKS_FILE" # Fallback
+        echo "Error: Device state changed, but could not classify case. State updated."
+        return 1
+    else
+        echo "No block device changes detected."
+        return 1
+    fi
+}
+
 function check_internet() {
     local host
     local retry_count=0
@@ -186,7 +227,6 @@ if [ -z $WH_BOOT_DEVICE ]; then
 else
     resolved_device=$(wh-storage-resolve $WH_BOOT_DEVICE)
     if echo "$current_boot_path" | grep -q "$resolved_device"; then
-        echo "Currently booted from the Primary device: ${resolved_device}"
         if [[ $online -eq 0 ]]; then
             wh_log "Currently booted from the Primary device: ${resolved_device}"
         else
@@ -199,13 +239,19 @@ if [ -z $WH_BOOT_DEVICE2 ]; then
 else
     resolved_device2=$(wh-storage-resolve $WH_BOOT_DEVICE2)
     if echo "$current_boot_path" | grep -q "$resolved_device2"; then
-        echo "Currently booted from the Secondary device: ${resolved_device}"
         if [[ $online -eq 0 ]]; then
             wh_log "Currently booted from the Secondary device: ${resolved_device2}"
         else
             wh_log_local "Currently booted from the Secondary device: ${resolved_device2}"
         fi
     fi
+fi
+
+check_new_boot_devices
+if [ $? -eq 0 ]; then
+    wh_log "New potential migration device found."
+    rm ${WH_HOME}/migration_order.sh 2>/dev/null && wh_log "Found an existing migration order that is now stale. Removing it."
+    sudo $WH_PATH/wormhole.sh migrate
 fi
 
 main_loop

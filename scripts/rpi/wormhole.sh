@@ -242,11 +242,11 @@ export -f wh-generate-backup-basename
 export -f wh-get-latest-backup
 
 case $command in
-    --version|-v|-V|--v|--V)
+    --version|-v|-V|--v|--V|version)
         echo $version
         exit 0
         ;;
-    --help|-h|--h)
+    --help|-h|--h|help)
         show_help
         exit 0
         ;;

@@ -41,7 +41,6 @@ fi
 
 echo -e  "==============================================================================="
 echo -e "${T_BOLD}${RPI_CONFIG_NAME}${T_NC} - ${T_ITALIC}${RPI_DESCRIPTION}${T_NC}"
-echo -e  "${T_ITALIC}You will have ${RPI_CONFIG_TIMEOUT} to cancel after confirming the write path${T_NC}"
 echo -e "\tdevice: ${T_BLUE}${display_tag}${T_NC} (query: ${T_BLUE}${display_search}${T_NC})"
 echo -e "\tinternal IP address: ${T_BLUE}${display_ip}${T_NC} (domain ${T_BLUE}${display_domain}${T_NC})"
 echo -e "\ttimezone: ${T_BLUE}${RPI_TIMEZONE}${T_NC}"

@@ -483,24 +483,24 @@ function count_lines() {
 # Loop through command-line arguments.
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -v|-V|--v|--V|--version)
+        --version|-v|-V|--v|--V|version)
             echo "${script_version}"
             exit 0
             ;;
-        --help|-h)
+        --help|-h|--h|help)
             show_help
             exit 0
             ;;
-        --update)
+        -u|update)
             ${base_dir}/update.sh
             exit 0
             ;;
-        --uninstall)
+        -un|uninstall)
             get_user_input -l -n "This will remove ${app_name}, clean up persistent data, caches, environment variables and symlinks. Do you want to continue?"
             [[ $? -eq 0 ]] && ${base_dir}/uninstall.sh
             exit 0
             ;;
-        --media)
+        -m|media)
             shift
             if [[ ! -z "$1" ]]; then
                 option_install_media="$1"
@@ -510,7 +510,7 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             ;;
-        --no-checkpoints|--nc|--restart|-r)
+        -r|-nc|restart|no-checkpoints)
             get_user_input -l "This will remove previous installation's data. Do you want to continue?"
             rm -f ${checkpoint_file}
             rm -f ${install_device_file}
@@ -910,7 +910,7 @@ if (( CHECKPOINT < 9)); then
     set_checkpoint 8
     # Run the imager
     echo
-    ${base_dir}/utils/imager.sh "$INSTALL_DEVICE" "${RPI_CONFIG_TAG}" "${RPI_CONFIG_SEARCH}" "${RPI_CONFIG_TIMEOUT}" "${firstrun_file}"
+    ${base_dir}/utils/imager.sh "$INSTALL_DEVICE" "${RPI_CONFIG_TAG}" "${RPI_CONFIG_SEARCH}" "${firstrun_file}"
     result=$?
     if [[ $result -eq 0 ]]; then
         IMAGE_WRITTEN=true
