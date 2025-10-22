@@ -18,7 +18,7 @@ STACKS="$@"
 [[ -z $STACKS ]] && STACKS="" && echo "${MODE^} all stacks" || echo "${MODE^} stacks: ${STACKS}"
 
 # Get all mount points
-ALL_MOUNT_POINTS=$(${base_dir}/docker_manage.sh mounts $STACKS | sort -u)
+ALL_MOUNT_POINTS=$(${base_dir}/utils/docker_manage.sh mounts $STACKS | sort -u)
 MOUNT_POINTS=$(echo "$ALL_MOUNT_POINTS" | grep -E -v "$EXCLUSION_PATTERNS")
 EXCLUDED_MOUNT_POINTS=$(echo "$ALL_MOUNT_POINTS" | grep -E "$EXCLUSION_PATTERNS")
 

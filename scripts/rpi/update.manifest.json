@@ -1,20 +1,32 @@
 {
     "files": {
-        "wormholed": {
-            "source": "/rpi/wormholed/wormholed.sh",
-            "path": "${WH_PATH}/wormholed.sh"
+        "wormhole": {
+            "source": "/rpi/wormhole.sh",
+            "path": "${WH_PATH}/wormhole.sh"
+        },
+        "update": {
+            "source": "/rpi/update.sh",
+            "path": "${WH_PATH}/update.sh"
         },
         "wormholed-service": {
             "source": "/rpi/wormholed/wormholed.service",
             "path": "/etc/systemd/system/wormholed.service"
         },
-        "wormholeinstalld": {
-            "source": "/rpi/wormholeinstalld/wormholeinstalld.sh",
-            "path": "${WH_PATH}/installer/wormholeinstalld.sh"
-        },
         "wormholeinstalld-service": {
             "source": "/rpi/wormholeinstalld/wormholeinstalld.service",
             "path": "/etc/systemd/system/wormholeinstalld.service"
+        },
+        "wormholed-start": {
+            "source": "/rpi/wormholed/wormholed_start.sh",
+            "path": "${WH_PATH}/services/wormholed_start.sh"
+        },
+        "wormholed-stop": {
+            "source": "/rpi/wormholed/wormholed_stop.sh",
+            "path": "${WH_PATH}/services/wormholed_stop.sh"
+        },
+        "wormholeinstalld": {
+            "source": "/rpi/wormholeinstalld/wormholeinstalld.sh",
+            "path": "${WH_PATH}/services/wormholeinstalld.sh"
         },
         "rpi_sysinfo": {
             "source": "/rpi/lib/rpi_sysinfo.sh",
@@ -28,53 +40,45 @@
             "source": "/rpi/lib/wh_storage.sh",
             "path": "/etc/profile.d/wh_storage.sh"
         },
-        "wormhole": {
-            "source": "/rpi/wormhole.sh",
-            "path": "${WH_PATH}/wormhole.sh"
-        },
         "config_update": {
             "source": "/rpi/config_update.sh",
-            "path": "${WH_PATH}/config_update.sh"
-        },
-        "update": {
-            "source": "/rpi/update.sh",
-            "path": "${WH_PATH}/update.sh"
+            "path": "${WH_PATH}/utils/config_update.sh"
         },
         "system_update": {
             "source": "/rpi/system_update.sh",
-            "path": "${WH_PATH}/system_update.sh"
-        },
-        "docker_install": {
-            "source": "/rpi/docker_install.sh",
-            "path": "${WH_PATH}/installer/docker_install.sh"
-        },
-        "docker_update_config": {
-            "source": "/rpi/docker_update_config.sh",
-            "path": "${WH_PATH}/docker_update_config.sh"
-        },
-        "docker_update_env": {
-            "source": "/rpi/docker_update_env.sh",
-            "path": "${WH_PATH}/docker_update_env.sh"
-        },
-        "docker_manage": {
-            "source": "/rpi/docker_manage.sh",
-            "path": "${WH_PATH}/docker_manage.sh"
-        },
-        "docker_backups": {
-            "source": "/rpi/docker_backups.sh",
-            "path": "${WH_PATH}/docker_backups.sh"
+            "path": "${WH_PATH}/utils/system_update.sh"
         },
         "migration": {
             "source": "/rpi/migration.sh",
-            "path": "${WH_PATH}/migration.sh"
+            "path": "${WH_PATH}/utils/migration.sh"
         },
         "benchmark": {
             "source": "/rpi/benchmark.sh",
-            "path": "${WH_PATH}/benchmark.sh"
+            "path": "${WH_PATH}/utils/benchmark.sh"
         },
         "set_boot_order": {
             "source": "/rpi/set_boot_order.sh",
-            "path": "${WH_PATH}/set_boot_order.sh"
+            "path": "${WH_PATH}/utils/set_boot_order.sh"
+        },
+        "docker_update_config": {
+            "source": "/rpi/docker_update_config.sh",
+            "path": "${WH_PATH}/utils/docker_update_config.sh"
+        },
+        "docker_update_env": {
+            "source": "/rpi/docker_update_env.sh",
+            "path": "${WH_PATH}/utils/docker_update_env.sh"
+        },
+        "docker_manage": {
+            "source": "/rpi/docker_manage.sh",
+            "path": "${WH_PATH}/utils/docker_manage.sh"
+        },
+        "docker_backups": {
+            "source": "/rpi/docker_backups.sh",
+            "path": "${WH_PATH}/utils/docker_backups.sh"
+        },
+        "initial_update": {
+            "source": "/rpi/initial_update.sh",
+            "path": "${WH_PATH}/installer/initial_update.sh"
         },
         "embed_extract_files": {
             "source": "/common/embed_extract_files.sh",
@@ -88,10 +92,6 @@
             "source": "/common/report_install_progress.sh",
             "path": "${WH_PATH}/installer/report_install_progress.sh"
         },
-        "initial_update": {
-            "source": "/rpi/initial_update.sh",
-            "path": "${WH_PATH}/installer/initial_update.sh"
-        },
         "ufw_config": {
             "source": "/rpi/ufw_config.sh",
             "path": "${WH_PATH}/installer/ufw_config.sh"
@@ -99,6 +99,10 @@
         "nfs_config": {
             "source": "/rpi/nfs_config.sh",
             "path": "${WH_PATH}/installer/nfs_config.sh"
+        },
+        "docker_install": {
+            "source": "/rpi/docker_install.sh",
+            "path": "${WH_PATH}/installer/docker_install.sh"
         },
         "git_install": {
             "source": "/rpi/git_install.sh",

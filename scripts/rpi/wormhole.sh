@@ -27,8 +27,8 @@ function show_help(){
     echo
     echo "Maintenance & Lifecycle:"
     echo "  -u, update                 Updates the Wormhole manager script itself from the server."
-    echo "  -su, system-update         Run a system and service update (runs ${base_dir}/system_update.sh)."
-    echo "  -m, migrate                Run the system migration script (runs ${base_dir}/migration.sh)."
+    echo "  -su, system-update         Run a system and service update (runs ${base_dir}/utils/system_update.sh)."
+    echo "  -m, migrate                Run the system migration script (runs ${base_dir}/utils/migration.sh)."
     echo "  -cm, check-migration-plans Check for and execute any pending migration order scripts."
     echo "  -c, config <key> <value>   Update a specific ${binary_name} configuration key."
     echo "  -au, auto-update <system|self> <schedule>|disabled  Schedule or disable automatic updates."
@@ -37,7 +37,7 @@ function show_help(){
     echo "                             Example: ${binary_name} auto-update self disabled"
     echo
     echo "Docker Stack Management:"
-    echo "  -s, stack <command> [stack]  Manage Docker stacks (runs ${base_dir}/docker_manage.sh)."
+    echo "  -s, stack <command> [stack]  Manage Docker stacks (runs ${base_dir}/utils/docker_manage.sh)."
     echo "                             Note: If [stack] is omitted, the command runs on ALL stacks."
     echo "                             Example: ${binary_name} stack up my_stack"
     echo "                             Command 'mounts' lists unique stack mounts/volumes."
@@ -258,14 +258,14 @@ case $command in
         ;;
     -su|system-update)
         wh_log "Starting system update..."
-        ${base_dir}/system_update.sh 2>&1| while read -r line; do
+        ${base_dir}/utils/system_update.sh 2>&1| while read -r line; do
             wh_log "$line"
         done
         wh_log "Completed system update. exit status: ${PIPESTATUS[0]}"
         exit 0
         ;;
     -m|migrate)
-        ${base_dir}/migration.sh
+        ${base_dir}/utils/migration.sh
         exit 0
         ;;
     -cm|check-migration-plans)
@@ -274,9 +274,9 @@ case $command in
     -s|stack)
         shift
         if [[ $1 == "mounts" ]]; then
-            ${base_dir}/docker_manage.sh $@ | sort -u
+            ${base_dir}/utils/docker_manage.sh $@ | sort -u
         else
-            ${base_dir}/docker_manage.sh $@
+            ${base_dir}/utils/docker_manage.sh $@
         fi
         ;;
     -d|docker)
@@ -285,46 +285,46 @@ case $command in
         case "$docker_command" in
             -u|update)
                 wh_log "Starting docker configuration update..."
-                ${base_dir}/docker_update_config.sh || exit 1
+                ${base_dir}/utils/docker_update_config.sh || exit 1
                 wh_log "Updating docker environment..."
-                ${base_dir}/docker_update_env.sh || exit 1
+                ${base_dir}/utils/docker_update_env.sh || exit 1
                 wh_log "Completed docker configuration update"
                 ;;
             -ue|update-env)
                 wh_log "Starting docker environment update..."
-                ${base_dir}/docker_update_env.sh || exit 1
+                ${base_dir}/utils/docker_update_env.sh || exit 1
                 wh_log "Completed docker environment update"
                 ;;
             -b|backup)
                 shift
                 wh_log "Starting docker backup..."
-                ${base_dir}/docker_manage.sh stop $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh stop $@ || exit 1
                 wh_log "Backing up container volumes..."
-                ${base_dir}/docker_backups.sh backup $@ || exit 1
+                ${base_dir}/utils/docker_backups.sh backup $@ || exit 1
                 wh_log "Restarting containers..."
-                ${base_dir}/docker_manage.sh start $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh start $@ || exit 1
                 wh_log "Completed docker backup"
                 ;;
             -fr|full-restore)
                 shift
                 wh_log "Starting full-restore process..."
-                ${base_dir}/docker_manage.sh down $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh down $@ || exit 1
                 wh_log "Creating containers for services..."
-                ${base_dir}/docker_manage.sh create $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh create $@ || exit 1
                 wh_log "Restoring container volumes..."
-                ${base_dir}/docker_backups.sh restore $@ || exit 1
+                ${base_dir}/utils/docker_backups.sh restore $@ || exit 1
                 wh_log "Starting docker containers..."
-                ${base_dir}/docker_manage.sh start $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh start $@ || exit 1
                 wh_log "Completed full-restore process"
                 ;;
             -r|restore)
                 shift
                 wh_log "Starting docker restore process..."
-                ${base_dir}/docker_manage.sh stop $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh stop $@ || exit 1
                 wh_log "Restoring container volumes..."
-                ${base_dir}/docker_backups.sh restore $@ || exit 1
+                ${base_dir}/utils/docker_backups.sh restore $@ || exit 1
                 wh_log "Restarting containers..."
-                ${base_dir}/docker_manage.sh start $@ || exit 1
+                ${base_dir}/utils/docker_manage.sh start $@ || exit 1
                 wh_log "Completed docker restore process"
                 ;;
             *)
@@ -335,7 +335,7 @@ case $command in
         esac
         ;;
     -c|config)
-        ${base_dir}/config_update.sh "$2" "$3"
+        ${base_dir}/utils/config_update.sh "$2" "$3"
         [ $? -ne 0 ] && exit 1
         wh_log "Configuration variable $2 was updated."
         ;;

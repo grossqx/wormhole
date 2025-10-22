@@ -39,7 +39,7 @@ function schedule_boot_order_change(){
     schedule_migration
     echo "--- Boot order change to ${to} scheduled"
     echo "# Set boot order to $to" >> $plan
-    echo "${WH_PATH}/set_boot_order.sh -device $to" >> $plan
+    echo "${WH_PATH}/utils/set_boot_order.sh -device $to" >> $plan
 }
 
 echo "[1/${total_steps}] Starting migration script"
@@ -140,7 +140,7 @@ if [[ $boot_current == "primary" ]]; then
     if [[ $boot_secondary_found -eq 1 ]]; then
         echo "Scheduling cloning from ${resolved_device} (primary) to ${resolved_device2} (secondary)"
         schedule_cloning "$resolved_device" "$resolved_device2"
-        ${WH_PATH}/set_boot_order.sh -check
+        ${WH_PATH}/utils/set_boot_order.sh -check
         if [[ $? -eq 0 ]]; then
             echo "Boot order already explicitly set"
         else

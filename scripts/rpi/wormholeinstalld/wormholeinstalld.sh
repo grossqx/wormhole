@@ -318,14 +318,11 @@ if [ $boot_number -eq 2 ]; then
         echo "$line" >> "${install_log_path}"
     done
     
-    echo "Enabling wormholed.service" | log
     systemctl enable wormholed.service | log
     systemctl start wormholed.service | log
-    echo "wormholed.service $(systemctl status wormholed.service | grep Status)" | log
 
     # Catch the server up to logs from previous boot
     log_progress_state "Checking firstrun log"
-    echo "Reading the log from the previous boot" | log
     cat "${install_log_path}" | while read -r line; do
         echo "$line" | log
         script_progress=$(parse_progress "$line")
@@ -345,7 +342,7 @@ if [ $boot_number -eq 2 ]; then
     echo "Hello ${WH_INSTALL_USER}!" | log
     echo "This is ${installer_name} live from your $(hostname)" | log
     echo "Raspberry Pi will reboot multiple times during installation. Setting boot priority to the current boot media." | log
-    ${WH_PATH}/set_boot_order.sh -current | log
+    ${WH_PATH}/utils/set_boot_order.sh -current | log
 else
     log_progress_state "Starting up"
     echo "$message" | log
@@ -486,7 +483,6 @@ case $install_stage in
         to_install=($package_list_additional)
         for item in "${to_install[@]}"; do
             echo "[${wh_prefix}] - $item" | log
-            apt list $item | log
         done
         sudo apt-get install -y ${package_list_additional} | while read -r line; do
             if [[ $total_packages -eq 0 ]]; then # Get the total number of packages and calculate total tasks.
@@ -573,7 +569,7 @@ case $install_stage in
     5)
         stage_max_progress=3.0
         log_progress_state "Stage ${install_stage} / Migration planning"
-        ${WH_PATH}/migration.sh | while read -r line; do
+        ${WH_PATH}/utils/migration.sh | while read -r line; do
             echo "$line" | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then
@@ -604,7 +600,7 @@ case $install_stage in
     $number_of_stages)
         stage_max_progress=2.0
         log_progress_state "Stage ${install_stage} / Running benchmarks"
-        ${WH_PATH}/benchmark.sh | while read -r line; do
+        ${WH_PATH}/utils/benchmark.sh | while read -r line; do
             echo $line | log
             script_progress=$(parse_progress "$line")
             if [ $? -eq 0 ]; then

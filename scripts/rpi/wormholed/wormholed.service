@@ -6,6 +6,8 @@ Wants=network-online.target
 [Service]
 Type=notify
 ExecStart=/bin/bash ___EXEC_START_PATH___
+ExecStop=/bin/bash ___EXEC_STOP_PATH___
+TimeoutStopSec=120s
 User=root
 # video for RPI hardware access (/dev/vcio);
 SupplementaryGroups=video

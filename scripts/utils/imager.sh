@@ -7,6 +7,7 @@ OS_SEARCH_STRING=$3
 FIRSTRUN_SCRIPT=$4
 
 WRITE_TIMEOUT=10
+VERBOSE=1
 
 ## Text colors:
 source ${base_dir}/res/theme.env

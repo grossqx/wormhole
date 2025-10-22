@@ -251,9 +251,11 @@ function extract_file() {
 function extract_systemd_service() {
     local embedded_service_name="$1"
     local exec_start_script_path="$2"
+    local exec_stop_script_path=$(sed 's/start\.sh/stop\.sh/' <<< "$STRING")
     local systemd_service_path="$3"
     local source_script="${4:-$0}" # Default to the current script if not provided
     local exec_start_path_template="___EXEC_START_PATH___"
+    local exec_stop_path_template="___EXEC_STOP_PATH___"
     # Check for help flag
     if [[ "$embedded_service_name" == "-h" || "$embedded_service_name" == "--help" ]]; then
         echo "Usage: extract_systemd_service <embedded_service_name> <exec_start_script_path> <systemd_service_path> [source_script]"
@@ -293,7 +295,9 @@ function extract_systemd_service() {
         return 1
     fi
     local exec_start_script=$(eval echo "$exec_start_script_path")
+    local exec_stop_script=$(eval echo "$exec_stop_script_path")
     sed -i "s|${exec_start_path_template}|${exec_start_script}|g" "$temp_file"
+    sed -i "s|${exec_stop_path_template}|${exec_stop_script}|g" "$temp_file"
     sudo cp "$temp_file" "$systemd_service_path"
     if [[ $? -ne 0 ]]; then
         echo "Error: Failed to copy file with sudo." >&2

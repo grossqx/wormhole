@@ -186,9 +186,10 @@ echo "[5/17] Extracting embedded services" | log
 
 service_file_name="wormholed.service"
 echo "Installing ${service_file_name}..." | log
-service_exec_file=$(get_file_unpack_path "$0" "wormholed" 2> >(log))
+service_exec_file=$(get_file_unpack_path "$0" "wormholed-start" 2> >(log))
 service_unit_file=$(get_file_unpack_path "$0" "wormholed-service" 2> >(log))
-extract_file "wormholed" 2>&1 | log
+extract_file "wormholed-start" 2>&1 | log
+extract_file "wormholed-stop" 2>&1 | log
 extract_systemd_service "wormholed-service" "${service_exec_file}" "${service_unit_file}" 2>&1 | log
 
 service_file_name="wormholeinstalld.service"
