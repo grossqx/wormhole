@@ -133,29 +133,6 @@ Disable or delete the Node-RED flow
 # Motivation
 Primary goal is simpifying the OS flashing and first setup for the user on the client side by offloading most of the decisions to the user on the server side. Client's installation script is designerd to be simple and interactive, provide detailed instructions and progress status. It also reports progress to the server to simplify support and troubleshooting.
 
-
-# TODOs:
-
-wormhole tool
-- sync backup folder to other hosts
-
-wormholed.sh
-- auto-updates
-- detect new drives as migration cadidates
-
-server:
-- create api-keys and example config file from node-red if they are not present
-
-wormholeinstalld.sh:
-- fix progress bar stages
-- restore docker volumes from backup
-- ufw
-
-wormhole-installer:
-- fix incorrect network interface being picked when pi is on both eth and wifi
-- mc theme setter fix
-- make inputs invisible for ssh password and wifi password when inputting from keyboard
-
 # Issues:
 
 Feel free to open an issue if you found a bug or have an improvement suggestion.
