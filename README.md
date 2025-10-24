@@ -9,7 +9,7 @@ Displays progress and a realtime log of the **wormhole** installer finalizing se
 
 ### Hardware: 
 
-Linux machine with a SD-card-reader. or SATA/NVMe reader. *Can also be the same computer as the server.*
+Linux machine with a SD-card-reader or SATA/NVMe reader. *Can also be the same computer as the server.*
 
 
 ## 2. Server
@@ -20,15 +20,14 @@ Powered by **Node-RED** and defined by a single *flow.json* file.
 - Defines and serves **node configurations** to the installer **clients**
 - Serves configuration updates to the live **nodes**
 - Monitors system state of existing Raspberry Pi **nodes**
-- Handles logging
 
 ## 3. Node
 
-**wormhole** - Management Utility bash script. Handles administrative functions and provides commands to manually manage docker stacks and environment, backups, updates, migration and configuration changes.
+**wormhole** - Management utility bash script. Handles administrative functions and provides commands to manually manage docker stacks and environment, backups, updates, migration and configuration changes.
 
-**wormholeinstalld.service** - Installs everything else and disables itself in the end. Logs the installation process to both client and server.
+**wormholeinstalld.service** - Installs everything else and disables itself in the end. Sends logs of the installation process to the server.
 
-**wormholed.service** - Main background daemon. Handles telemetry reporting to the server and manages routine checks on every reboot.
+**wormholed.service** - Main background daemon. Handles telemetry reporting to the server and routine checks on every reboot.
 
 ### Hardware: 
 
@@ -133,32 +132,23 @@ Disable or delete the Node-RED flow
 # Motivation
 Primary goal is simpifying the OS flashing and first setup for the user on the client side by offloading most of the decisions to the user on the server side. Client's installation script is designerd to be simple and interactive, provide detailed instructions and progress status. It also reports progress to the server to simplify support and troubleshooting.
 
-
 # TODOs:
 
-wormhole tool
-- sync backup folder to other hosts
-
-wormholed.sh
-- auto-updates
-- detect new drives as migration cadidates
-
-server:
-- create api-keys and example config file from node-red if they are not present
+wormhole-installer:
+- fix progress bar stages
 
 wormholeinstalld.sh:
-- fix progress bar stages
 - restore docker volumes from backup
 - ufw
+- docker manage progress
+- docker pull progress
 
-wormhole-installer:
-- fix incorrect network interface being picked when pi is on both eth and wifi
-- mc theme setter fix
-- make inputs invisible for ssh password and wifi password when inputting from keyboard
+- Internet speed limiting
 
 # Issues:
 
 Feel free to open an issue if you found a bug or have an improvement suggestion.
+
 ## Known upsteam issues:
 [[BUG]: rpi-imager ignores settings in firstrun.sh when writing to nvme](https://github.com/raspberrypi/rpi-imager/issues/1165)
 
@@ -175,8 +165,11 @@ Installer makes use of the official [Raspberry Pi Imager](https://github.com/ras
 
 Migration powered by [rpi-clone](https://github.com/geerlingguy/rpi-clone).
 
+# License
 
-# Licenses for other components
+Unless otherwise specified, all code is released under the MIT License (MIT).
+
+## Licenses for other projects
 - Node-RED   [Apache 2.0](https://github.com/node-red/node-red/blob/master/LICENSE)
 - rpi-clone  [BSD 3-Clause](https://github.com/geerlingguy/rpi-clone/blob/master/LICENSE)
 - rpi-imager [LGPL v3](https://github.com/raspberrypi/rpi-imager/blob/main/license.txt)

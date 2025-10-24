@@ -308,8 +308,10 @@ fi
 message="[${wh_prefix}] Running Stage #${install_stage}, Boot #${boot_number}"
 sdreport "$message"
 
-# Boot 2 is the first boot after firstboot
 if [ $boot_number -eq 2 ]; then
+    # Enable to disable WiFi if it needs to be done
+    systemctl start wormholed.service | log
+
     # Packages required for log function to work
     echo "${marker_state}Installing dependencies${marker_close}" | tee -a "${install_log_path}"
     echo "$message" | tee -a "${install_log_path}"
@@ -317,9 +319,9 @@ if [ $boot_number -eq 2 ]; then
     apt-get install -y ${package_list_dependency} | while read -r line; do
         echo "$line" >> "${install_log_path}"
     done
-    
+
     systemctl enable wormholed.service | log
-    systemctl start wormholed.service | log
+    systemctl restart wormholed.service | log
 
     # Catch the server up to logs from previous boot
     log_progress_state "Checking firstrun log"
@@ -331,10 +333,9 @@ if [ $boot_number -eq 2 ]; then
             log_progress_percent "$(get_install_progress "${stage_progress}" "0" "1" "${install_stage}" "${number_of_stages}")"
         fi
     done
-    # Remove firstrun.sh log and firstrun.sh backup
-    rm -f "$firstrun_log_path" "$firstrun_backup"
 
-    # Real-time logging can start now
+    rm -f "$firstrun_log_path" "$firstrun_backup" # Remove firstrun.sh log and firstrun.sh backup
+
     log_progress_state "Stage ${install_stage} / Starting the installation"
     echo "3..." | log
     echo "2.." | log

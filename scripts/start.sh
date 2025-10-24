@@ -441,7 +441,7 @@ function userdata_save_config(){
 function userdata_save_router_config(){
     ROUTER_CONFIG_INSTRUCTION_FILE="${config_memos_dir}/${RPI_CONFIG_NAME}_router-config.txt"
     rm -f "$ROUTER_CONFIG_INSTRUCTION_FILE"
-    ${base_dir}/utils/print_router_config.sh "${configuration_file}" $DEVICE_MAC $DEVICE_INTERFACE "true" >> $ROUTER_CONFIG_INSTRUCTION_FILE
+    ${base_dir}/utils/print_router_config.sh "${configuration_file}" $RPI_MAC "true" >> $ROUTER_CONFIG_INSTRUCTION_FILE
     echo -e "${T_ITALIC}These instructions were saved to ${ROUTER_CONFIG_INSTRUCTION_FILE}${T_NC}"
     echo -e "${T_ITALIC}You can save this file for future reference${T_NC}"
     get_user_input -e
@@ -450,13 +450,11 @@ function userdata_save_router_config(){
 # Test IP provided by the user
 function get_mac_address(){
     local ip=$1
-    network_info=$(timeout 5 ip neigh show "$ip" | awk 'NF>=5 {print $3, $5}')
+    network_info=$(timeout 5 ip neigh show "$ip" | awk 'NF>=5 {print $5}')
     if [[ -n "$network_info" ]]; then
         # Split the string into separate variables.
-        read -r found_interface found_mac <<< "$network_info"
-        DEVICE_MAC=$found_mac
-        DEVICE_INTERFACE=$found_interface
-        echo -e "${T_BLUE}MAC address and network interface found${T_NC}"
+        read -r found_mac <<< "$network_info"
+        RPI_MAC=$found_mac
         return 0
     else
         echo -e "${T_RED}Error: Could not find a device with that IP address or it is unreachable.${T_NC}"
@@ -564,8 +562,7 @@ DEVICE_REACHABLE=false
 ROUTER_CONFIGURED=false
 CONFIG_UPLOADED=false
 AUTOINSTALL_DONE=false
-DEVICE_MAC=""
-DEVICE_INTERFACE=""
+RPI_MAC=""
 ROUTER_CONFIG_INSTRUCTION_FILE=""
 
 server_pollrate=250
@@ -1020,7 +1017,7 @@ if (( CHECKPOINT < 10)); then
         fi
     fi
     get_mac_address $online_ip
-    send_report "Client identified the device: $online_ip MAC address ${DEVICE_MAC} (${DEVICE_INTERFACE})"
+    send_report "Client identified the device: $online_ip MAC address ${RPI_MAC}"
     set_checkpoint 10
 else
     source ${configuration_file}
@@ -1029,7 +1026,7 @@ else
         online_ip=$RPI_IP_ADDR
         DEVICE_REACHABLE=true
         get_mac_address $RPI_IP_ADDR
-        send_report "Client identified the device: $RPI_IP_ADDR MAC address ${DEVICE_MAC} (${DEVICE_INTERFACE})"
+        send_report "Client identified the device: $RPI_IP_ADDR MAC address ${RPI_MAC}"
         set_checkpoint 10
     else
         send_report "Client failed to confirm that Raspberry Pi is online at the IP address provided in configuration."
@@ -1048,7 +1045,7 @@ if (( CHECKPOINT < 12)); then
     router_ip=$(ip route | grep default | awk '{print $3}')
     send_report "Router ${router_ip} configuration settings were provided to the user.\nUser prompted to configure and reboot the router."
     echo -e "${T_BOLD}Please configure your router${T_NC}"
-    ${base_dir}/utils/print_router_config.sh "${configuration_file}" "${DEVICE_MAC}" "${DEVICE_INTERFACE}"
+    ${base_dir}/utils/print_router_config.sh "${configuration_file}" "${RPI_MAC}"
     userdata_save_router_config
     echo
     # Wait for confirmation
