@@ -63,34 +63,34 @@ function print_progressbar() {
     local message="$3"
     local num_stages="$4"
     local filled_chars=$(echo "(${progress} * ${progress_bar_length}) / 100" | bc)
-    local remaining_chars=$((progress_bar_length - filled_chars))
-    local base_filled=$(printf '%*s' "$filled_chars" | tr ' ' '=')
-    local base_empty=$(printf '%*s' "$remaining_chars" | tr ' ' '.')
     local final_bar=""
     if [[ -n "$num_stages" ]] && [[ "$num_stages" -gt 1 ]]; then
         local stage_length
         stage_length=$(echo "${progress_bar_length} / ${num_stages}" | bc)
-        local current_filled_index=0
-        local current_empty_index=0
+        local proto_filled=$(printf '%*s' "$progress_bar_length" | tr ' ' '=')
+        local proto_empty=$(printf '%*s' "$progress_bar_length" | tr ' ' '.')
+        local total_filled_used=0
         for ((i = 1; i <= num_stages; i++)); do
-            local segment_filled_chars=$((filled_chars - current_filled_index))
+            local remaining_fill=$((filled_chars - total_filled_used))
+            local segment_filled_chars="$remaining_fill"
             if [[ "$segment_filled_chars" -gt "$stage_length" ]]; then
                 segment_filled_chars="$stage_length"
             elif [[ "$segment_filled_chars" -lt 0 ]]; then
                 segment_filled_chars=0
             fi
             local segment_empty_chars=$((stage_length - segment_filled_chars))
-            local segment_filled="${base_filled:$current_filled_index:$segment_filled_chars}"
-            local segment_empty="${base_empty:$current_empty_index:$segment_empty_chars}"
-            final_bar="${final_bar}${segment_filled}${segment_empty}" # Append to the final bar
-            if [[ "$i" -lt "$num_stages" ]]; then # Append the separator if it's not the last stage
+            local segment_filled="${proto_filled:0:$segment_filled_chars}"
+            local segment_empty="${proto_empty:0:$segment_empty_chars}"
+            final_bar="${final_bar}${segment_filled}${segment_empty}"
+            if [[ "$i" -lt "$num_stages" ]]; then # Add separator
                 final_bar="${final_bar}|"
             fi
-            # Update the starting indices for the next segment
-            current_filled_index=$((current_filled_index + segment_filled_chars))
-            current_empty_index=$((current_empty_index + segment_empty_chars))
+            total_filled_used=$((total_filled_used + segment_filled_chars))
         done
     else
+        local remaining_chars=$((progress_bar_length - filled_chars))
+        local base_filled=$(printf '%*s' "$filled_chars" | tr ' ' '=')
+        local base_empty=$(printf '%*s' "$remaining_chars" | tr ' ' '.')
         final_bar="${base_filled}${base_empty}"
     fi
     printf "\033[K  ${T_GREEN}%s${T_NC} ${T_BOLD}%s${T_NC} ${T_BLUE}%s${T_NC}\n" "[${final_bar}]" "${progress}%" "${message}"

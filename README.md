@@ -134,9 +134,6 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 # TODOs:
 
-wormhole-installer:
-- fix progress bar stages
-
 wormholeinstalld.sh:
 - restore docker volumes from backup
 - ufw
