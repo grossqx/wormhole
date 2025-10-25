@@ -137,8 +137,7 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 wormholeinstalld.sh:
 - restore docker volumes from backup
 - ufw
-- docker manage progress
-- docker pull progress
+- enable autoupdates by config
 
 - Internet speed limiting
 

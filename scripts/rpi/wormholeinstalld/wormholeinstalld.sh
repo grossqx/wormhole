@@ -175,7 +175,7 @@ function get_install_progress() {
 
 # The function to detect progress numbers in a given line.
 # It looks for patterns like [x/y] or [x]. If a total is available, it outputs two numbers. If not, it outputs only one.
-function parse_progress() {
+function parse_ongoing_step() {
     local line="$1"
     # Try to extract the two-number pattern first
     result=$(echo "$line" | sed -nE 's/.*\[([0-9.]+)\/([0-9.]+)\](.*)$/\1 \2/p')
@@ -190,6 +190,19 @@ function parse_progress() {
         return 0
     fi
     return 1
+}
+
+function parse_stage_progress(){
+    local line="$1"
+    local min="$2"
+    local max="$3"
+    local stage_min="$4"
+    local stage_max="$5"
+    script_progress=$(parse_ongoing_step "$line")
+    if [ $? -eq 0 ]; then
+        stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) "$min" $(echo "$script_progress" | cut -d ' ' -f 2) "$stage_min" "$stage_max")
+        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${max}" "${install_stage}" "${number_of_stages}")"
+    fi
 }
 
 function move_on_to_stage() {
@@ -327,11 +340,7 @@ if [ $boot_number -eq 2 ]; then
     log_progress_state "Checking firstrun log"
     cat "${install_log_path}" | while read -r line; do
         echo "$line" | log
-        script_progress=$(parse_progress "$line")
-        if [ $? -eq 0 ]; then
-            stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 1 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-            log_progress_percent "$(get_install_progress "${stage_progress}" "0" "1" "${install_stage}" "${number_of_stages}")"
-        fi
+        parse_stage_progress "${line}" 0 1 0 1
     done
 
     rm -f "$firstrun_log_path" "$firstrun_backup" # Remove firstrun.sh log and firstrun.sh backup
@@ -416,7 +425,6 @@ fi
 
 case $install_stage in
     1)  log_progress_state "Stage ${install_stage} / Updating the OS"
-        # apt-upgrade progress tracking
         declare -i total_packages=0
         declare -i total_tasks=0
         declare -i current_task=0
@@ -449,30 +457,19 @@ case $install_stage in
         move_on_to_stage "2"
         ;;
     2)
-        stage_progress=0.0
-        stage_max_progress=4.0
         log_progress_state "Stage ${install_stage} / Installing git"
         ${WH_PATH}/installer/git_install.sh --lfs | while read -r line; do
             echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 4 0 1
         done
         log_progress_state "Stage ${install_stage} / Installing docker"
         ${WH_PATH}/installer/docker_install.sh | while read -r line; do
             echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 1 4)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 4 1 4
         done
         move_on_to_stage "3"
         ;;
     3)  
-        # Stage progress tracking
         declare -i total_packages=0
         declare -i current_task=0
         total_tasks=0
@@ -543,71 +540,55 @@ case $install_stage in
         move_on_to_stage "4"
         ;;
     4)
-        stage_progress=0.0
-        stage_max_progress=3.0
         ${WH_PATH}/wormhole.sh --version | log
         log_progress_state "Stage ${install_stage} / Updating docker configs"
-        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh docker update 2>&1 | while read -r line; do
             echo "$line" | log
+            parse_stage_progress "${line}" 1 6 1 2
         done
-        stage_progress=1.0
         log_progress_state "Stage ${install_stage} / Pulling docker images"
-        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh stack pull 2>&1 | while read -r line; do
-            if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer\| Verifying Checksum\| Download complete\| Pull complete"; then
+            if echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer\| Verifying Checksum\| Download complete\| Pull complete"; then
+                continue
+            else
                 echo "$line" | log
+                parse_stage_progress "${line}" 1 6 2 5
             fi
         done
-        stage_progress=2.0
         log_progress_state "Stage ${install_stage} / Docker creating containers"
-        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh stack create 2>&1 | while read -r line; do
             echo "$line" | log
+            parse_stage_progress "${line}" 1 6 5 6
         done
         move_on_to_stage "5"
         ;;
     5)
-        stage_max_progress=3.0
         log_progress_state "Stage ${install_stage} / Migration planning"
         ${WH_PATH}/utils/migration.sh | while read -r line; do
             echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 3 0 1
         done
         log_progress_state "Stage ${install_stage} / NFS configuration"
         ${WH_PATH}/installer/nfs_config.sh -i | while read -r line; do
-            echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 1 2)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+            if echo "$line" | grep -q "debconf: "; then
+                continue
+            else
+                echo "$line" | log
+                parse_stage_progress "${line}" 0 3 1 2
             fi
         done
         log_progress_state "Stage ${install_stage} / UFW configuration"
         ${WH_PATH}/installer/ufw_config.sh | while read -r line; do
             echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 2 3)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 3 2 3
         done
         move_on_to_stage "6"
         ;;
     $number_of_stages)
-        stage_max_progress=2.0
         log_progress_state "Stage ${install_stage} / Running benchmarks"
         ${WH_PATH}/utils/benchmark.sh | while read -r line; do
             echo $line | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 1 0 1
         done
         log_progress_state "Stage ${install_stage} / Finalizing installation"
         sdreport "Intallation finished. Performing final steps"
@@ -615,8 +596,7 @@ case $install_stage in
         echo "Disabling ${installer_name} and removing checkpoint files" | log
         systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log
-        rm -f "${checkpoint_stage}" | log 
-        log_progress_percent "$(get_install_progress "2" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+        rm -f "${checkpoint_stage}" | log         
         log_progress_state "Stage ${install_stage} / Rebooting"
         echo "$(hostname) will reboot in 1 minute. If migration is planned, it will be executed on next boot." | log
         
