@@ -3,66 +3,69 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.2.0.0/24
+        - subnet: ${VPN_SUBNET}
 services:
   unbound:
     container_name: unbound
     image: mvance/unbound-rpi:latest
-    # image: alpinelinux/unbound:latest-aarch64
-    # image: madnuttah/unbound:latest 
     hostname: unbound
-    env_file: .env
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-    volumes:
-      - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
+    # env_file: .env
+    # environment:
+      # - PUID=${PUID}
+      # - PGID=${PGID}
+    # volumes:
+      # - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
     networks:
       private_network:
-        ipv4_address: 10.2.0.200
+        ipv4_address: ${UNBOUND_IP}
     restart: unless-stopped
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
     hostname: pihole
-    volumes:
-      - ${STORAGE_PATH}/pihole/etc-pihole/:/etc/pihole/
-      - ${STORAGE_PATH}/pihole/etc-dnsmasq.d/:/etc/dnsmasq.d/
-    cap_add:
-      - NET_ADMIN
-    networks:
-      private_network:
-        ipv4_address: 10.2.0.100
     env_file: .env
     environment:
       - TZ=${TZ}
       - PIHOLE_UID=${PUID}
       - PIHOLE_GID=${PGID}
-      # - PIHOLE_DNS_='10.2.0.200#53'
-      - WEBPASSWORD=${WEBPASSWORD}
-      # - DNSMASQ_LISTENING: local
-      - DNSMASQ_LISTENING=all
+      # Set a password to access the web interface. Not setting one will result in a random password being assigned
+      - FTLCONF_webserver_api_password=${WEBPASSWORD}
+      # Upstream DNS server(s) for Pi-hole to forward queries to, separated by ';'. Non-standard ports #[port number]. Supports Docker service names
+      - FTLCONF_dns_upstreams=${UNBOUND_IP}
+      # If using Docker's default `bridge` network setting the dns listening mode should be set to 'all'
+      # - FTLCONF_dns_listeningMode=ALL
+    volumes:
+      # For persisting Pi-hole's databases and common configuration file
+      - ${STORAGE_PATH}/pihole/etc-pihole:/etc/pihole
     ports:
-      - ${PIHOLE_UI_PORT}:80
-      - 53:53/tcp
-      - 53:53/udp
+      # HTTP Port
+      - "${PIHOLE_UI_PORT}:80/tcp"
+      # HTTPs Port. FTL will generate a self-signed certificate
+      # - "443:443/tcp"
+      # DNS Ports
+      - "53:53/tcp"
+      - "53:53/udp"
+      # DHCP Server
+      - "67:67/udp"
+      # NTP server
+      - "123:123/udp"
+    cap_add:
+      # Required if you are using Pi-hole as your DHCP server, else not needed
+      - NET_ADMIN
+      # Required for NTP client to be able to set the host's system time
+      - SYS_TIME
+      # Optional. FTL sets itself as an important process.
+      - SYS_NICE
+    networks:
+      private_network:
+        ipv4_address: ${PIHOLE_IP}
     depends_on:
       - unbound
     restart: unless-stopped
   wireguard:
-    image: linuxserver/wireguard
     container_name: wireguard
-    cap_add:
-      - NET_ADMIN
-      # - SYS_MODULE
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv4.ip_forward=1
-    volumes:
-      - ${STORAGE_PATH}/wireguard/wg_confs:/config/wg_confs
-    networks:
-      private_network:
-        ipv4_address: 10.2.0.99
+    image: linuxserver/wireguard
+    hostname: wireguard
     env_file: .env
     environment:
       - TZ=${TZ}
@@ -70,30 +73,44 @@ services:
       - PGID=${PGID}
       - SERVERURL=${WIREGUARD_URL}
       - SERVERPORT=${WIREGUARD_PORT}
-      - PEERDNS=10.2.0.100
+      - PEERDNS=${PIHOLE_IP}
       - PEERS=wormhole
+    volumes:
+      - ${STORAGE_PATH}/wireguard/wg_confs:/config/wg_confs
     ports:
       - ${WIREGUARD_UI_PORT}:${WIREGUARD_UI_PORT}
-      - ${WIREGUARD_PORT}:51820/udp   # Port 51820 from setup 1 for VPN tunnel
+      - ${WIREGUARD_PORT}:51820/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    cap_add:
+      - NET_ADMIN
+      # Some hosts may not load the iptables kernel modules by default. In order for the container to be able
+      # to load them, you need to assign the SYS_MODULE capability and add the optional /lib/modules volume mount. 
+      # Alternatively you can modprobe them from the host before starting the container.
+      # - SYS_MODULE
+    networks:
+      private_network:
+        ipv4_address: ${WIREGUARD_IP}
     depends_on:
       - pihole
     restart: unless-stopped
   wg-portal:
-    image: wgportal/wg-portal:v2
     container_name: wg-portal
-    network_mode: service:wireguard
+    image: wgportal/wg-portal:v2
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STORAGE_PATH}/wireguard/wg_confs:/etc/wireguard
+      - ${STORAGE_PATH}/wg-portal/data:/app/data
+      - ${CONFIG_DIR}/wg-portal:/app/config
     logging:
       options:
         max-size: "10m"
         max-file: "3"
     cap_add:
       - NET_ADMIN
-    volumes:
-      - ${STORAGE_PATH}/wireguard/wg_confs:/etc/wireguard
-      - ${STORAGE_PATH}/wg-portal/data:/app/data
-      - ${CONFIG_DIR}/wg-portal:/app/config
-    environment:
-      - TZ=${TZ}
+    network_mode: service:wireguard
     depends_on:
       - wireguard
     restart: unless-stopped

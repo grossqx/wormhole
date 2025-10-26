@@ -153,9 +153,12 @@ Feel free to open an issue if you found a bug or have an improvement suggestion.
 Server running on [Node-RED](https://github.com/node-red/node-red-docker).
 
 Docker-compose project for the node is based on [wirehole](https://github.com/IAmStoxe/wirehole) project. Main functionality provided by:
-- [WireGuard](https://www.wireguard.com/) (image [linuxserver/wireguard](https://docs.linuxserver.io/images/docker-wireguard/))
+- [WireGuard](https://www.wireguard.com/)
+(image [linuxserver/wireguard](https://docs.linuxserver.io/images/docker-wireguard/))
 - [Unbound](https://unbound.nlnetlabs.nl/)
+(image [mvance/unbound-rpi](https://hub.docker.com/r/mvance/unbound-rpi))
 - [Pi-hole](https://github.com/pi-hole/pi-hole)
+(image [pihole/pihole](https://hub.docker.com/r/pihole/pihole))
 
 Installer makes use of the official [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager).
 
