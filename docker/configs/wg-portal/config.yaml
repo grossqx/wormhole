@@ -1,12 +1,44 @@
+# WireGuard Portal configuration
+#
+# Documentation:
+# https://wgportal.org/latest/documentation/configuration/overview/
+#
+#
 core:
-  restore_state: false
-  import_existing: false
-  admin_user: admin@wgportal.local
-  admin_password: wgportal
+  # This user will be created as a default admin if it does not yet exist
+  admin_user: admin
+  # The default password should be changed immediately!
+  admin_password: changeme
+  # If a token is provided, the REST API can be accessed using this token.
+  # If empty, the API is initially disabled for the admin user
   admin_api_token: ""
+  # Restore the WireGuard interface states (up/down) that existed before WireGuard Portal started
+  restore_state: false
+  #  On startup, import existing WireGuard interfaces and peers into WireGuard Portal
+  import_existing: false
 advanced:
+  # Path to a directory where wg-quick style configuration files will be stored
   config_storage_path: /etc/wireguard/
+  # The first port to use when automatically creating new WireGuard interfaces
   start_listen_port: 51820
-  start_cidr_v4: "10.50.50.1/32"
+  # The initial IPv4 subnet to use when automatically creating new WireGuard interfaces
+  start_cidr_v4: "10.50.50.1/24"
+  # The initial IPv6 subnet to use when automatically creating new WireGuard interfaces
+  start_cidr_v6: "fdfd:d3ad:c0de:1234::0/64"
+  # Enable or disable IPv6 support
+  use_ip_v6: false
 web:
+  # If you are using a reverse proxy, set this to the external URL of the reverse proxy, otherwise 
+  # login will fail. If you access the portal via IP address, set this to the IP address of the server.
   external_url: http://192.168.0.11:8888
+  # The title that is shown in the web frontend
+  site_title: "Wormhole WireGuard Portal"
+  # Shown at the bottom of the web frontend
+  site_company_name: "gqx wormhole"
+auth:
+  # The password should be strong and secure. It is recommended to use a password with at 
+  # least 16 characters, including uppercase and lowercase letters, numbers, and special characters.
+  # The default admin password strength is also enforced by this setting.
+  min_password_length: 8
+  # If true, the login form is hidden and only the OIDC, OAuth, LDAP, or WebAuthn providers are shown.
+  hide_login_form: false

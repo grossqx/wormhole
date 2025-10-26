@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
   wg-portal:
     container_name: wg-portal
-    image: wgportal/wg-portal:v2
+    image: wgportal/wg-portal:v2.1.0
     environment:
       - TZ=${TZ}
     volumes:

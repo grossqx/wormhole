@@ -81,7 +81,7 @@ current_stack=1
 total_stacks=$(find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | grep -zc .)
 find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
     STACK_NAME=$(basename "$stack_dir")
-    if [[ $ACTION == "list" || $ACTION == "ls" ]]; then
+    if [[ $ACTION == "list" ]]; then
         echo "$STACK_NAME"
         continue
     fi

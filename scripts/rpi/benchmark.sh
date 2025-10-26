@@ -9,6 +9,7 @@ echo "[1/7] Final system info"
 rpi-sysinfo
 
 echo "[2/7] Running disk benchmark"
+sudo ${WH_PATH}/third_party/disk-benchmark/disk-benchmark.sh
 
 echo "[3/7] Network state"
 nmcli general
