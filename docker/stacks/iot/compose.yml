@@ -9,4 +9,4 @@ services:
       - ${STORAGE_PATH}/common:/common
     restart: unless-stopped
     ports:
-      - 1880:1880
+      - ${NODE_RED_PORT}:1880
