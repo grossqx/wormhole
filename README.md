@@ -135,9 +135,11 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 # TODOs:
 
 wormholeinstalld.sh:
+- autoupdate settings in configuration
+- custom docker directory in configuration
+- send default wg peer to the server
 - restore docker volumes from backup
 - ufw
-- enable autoupdates by config
 
 - Internet speed limiting
 
