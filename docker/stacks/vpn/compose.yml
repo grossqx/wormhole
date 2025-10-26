@@ -9,10 +9,6 @@ services:
     container_name: unbound
     image: mvance/unbound-rpi:latest
     hostname: unbound
-    # env_file: .env
-    # environment:
-      # - PUID=${PUID}
-      # - PGID=${PGID}
     # volumes:
       # - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
     networks:
