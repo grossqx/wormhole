@@ -19,7 +19,7 @@ EXPORT_DIR="${EXPORT_BASE}/${EXPORT_NAME}"
 
 install_nfs_packages() {
     export DEBIAN_FRONTEND=noninteractive
-    echo "Installing NFS server (nfs-kernel-server) and client (nfs-common) packages..."
+    echo "[0/7]. Installing NFS server (nfs-kernel-server) and client (nfs-common) packages..."
     sudo apt-get update
     if sudo apt-get install -y nfs-kernel-server nfs-common; then
         echo "NFS packages installed successfully."
@@ -49,13 +49,13 @@ if [ ! -d "$SOURCE_DIR" ]; then
     exit 1
 fi
 
-echo "[1]. Creating the export directory: ${EXPORT_DIR}"
+echo "[1/7]. Creating the export directory: ${EXPORT_DIR}"
 sudo mkdir -p "${EXPORT_DIR}"
 
-echo "[2]. Setting permissions on ${EXPORT_BASE}"
+echo "[2/7]. Setting permissions on ${EXPORT_BASE}"
 sudo chmod -R 777 "${EXPORT_BASE}"
 
-echo "[3]. Creating the bind mount: ${SOURCE_DIR} -> ${EXPORT_DIR}"
+echo "[3/7]. Creating the bind mount: ${SOURCE_DIR} -> ${EXPORT_DIR}"
 if sudo mount --bind "${SOURCE_DIR}" "${EXPORT_DIR}"; then
     echo "Bind mount successful."
 else
@@ -63,7 +63,7 @@ else
     exit 1
 fi
 
-echo "[4]. Adding entry to /etc/fstab for persistence"
+echo "[4/7]. Adding entry to /etc/fstab for persistence"
 FSTAB_LINE="${SOURCE_DIR}    ${EXPORT_DIR}    none    bind    0    0"
 
 if grep -Fxq "$FSTAB_LINE" /etc/fstab; then
@@ -73,7 +73,7 @@ else
     echo "Added line to /etc/fstab: $FSTAB_LINE"
 fi
 
-echo "[5]. Configuring NFS export in /etc/exports"
+echo "[5/7]. Configuring NFS export in /etc/exports"
 EXPORTS_LINE="${EXPORT_DIR}    ${CLIENT_ACCESS}(${EXPORT_OPTIONS})"
 
 if grep -Fxq "$EXPORTS_LINE" /etc/exports; then
@@ -83,7 +83,7 @@ else
     echo "Added line to /etc/exports: $EXPORTS_LINE"
 fi
 
-echo "[6]. Applying new NFS export rules"
+echo "[6/7]. Applying new NFS export rules"
 if sudo exportfs -ra; then
     echo "NFS export rules reloaded successfully."
 else
@@ -91,3 +91,5 @@ else
 fi
 
 echo "The directory ${SOURCE_DIR} is now exported to ${CLIENT_ACCESS} at ${EXPORT_DIR}"
+
+echo "[7/7]. NFS configuration completed"

@@ -3,7 +3,7 @@
 cleanup_packages="docker.io docker-doc docker-compose podman-docker containerd runc"
 install_packages="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
 
-echo "Starting docker install..."
+echo "[0/8] Starting docker install"
 
 echo "[1/8] Removing old packages"
 sudo apt-get remove -y $cleanup_packages || true
