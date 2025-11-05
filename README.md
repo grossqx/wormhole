@@ -134,11 +134,10 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 # TODOs:
 
-- autoupdate settings in configuration
+- backup sync
 - send default wg peer to the server
 - restore docker volumes from backup
 - ufw
-- backup sync
 
 # Issues:
 
