@@ -39,7 +39,7 @@ function sdreport_success() {
 
 function main_loop(){
     # Send telemetry to the server
-    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
+    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry" > /dev/null
 }
 
 check_new_boot_devices() {

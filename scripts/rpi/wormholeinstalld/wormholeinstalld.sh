@@ -334,7 +334,7 @@ install_log_path="${WH_HOME}/wormhole_install.log"
 third_party_scripts_dir="${WH_PATH}/third_party"
 get_pollrate_endpoint="${WH_SERVER_API_URL}/wh/get_pollrate_rpi"
 install_log_endpoint="${WH_SERVER_API_URL}/wh/install_log_write"
-check_config_endpoint="${WH_SERVER_API_URL}/wh/rpi.check_config"
+configuration_endpoint="${WH_SERVER_API_URL}/wh/rpi.configuration"
 checkpoint_boot="${WH_HOME}/.checkpoint-boot"
 checkpoint_stage="${WH_HOME}/.checkpoint-stage"
 firstrun_log_path="/boot/firstrun.log"
@@ -420,7 +420,7 @@ echo "[${wh_prefix}] Getting authenticated by the server..." | log
 payload=$(jq --null-input \
             --arg topic "check" \
             '{topic: $topic}')
-wh_send_payload "$payload" "$check_config_endpoint" | log
+wh_send_payload "$payload" "$configuration_endpoint" | log
 if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
     echo "[${wh_prefix}] Hardware API key recognized by the server." | log
 else

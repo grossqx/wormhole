@@ -51,6 +51,7 @@ function wh_send_payload() {
                 printf "[%s/%sTX/%sRX] Error: %s\n" "$TOTAL_TIME_F" "$TX_TIME_F" "$RX_TIME_F" "$STATUS"
                 return 1
             else
+                echo "$STATUS"
                 return 0
             fi
         fi
@@ -98,7 +99,7 @@ function wh_log_remote() {
                 --arg message "$message" \
                 --arg topic "$topic" \
                 '{timestamp: $timestamp, message: $message, topic: $topic}')
-    wh_send_payload "$PAYLOAD" "$api_url"
+    wh_send_payload "$PAYLOAD" "$api_url" > /dev/null
 }
 
 

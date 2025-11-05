@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Variables provided by wormhole: 
+#   docker_dir - root directory for docker setup. Should contain this script.
+#   docker_stacks - directory containing docker stack directories.
+#   docker_configs - directory containing configuration files.
+#   docker_volumes - directory containing persistent data.
+
 TZ=$(timedatectl | grep "Time zone" | awk '{print $3}')
 STORAGE_PATH="${docker_volumes}"
 STACKS_DIR="${docker_stacks}"
