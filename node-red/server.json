@@ -42,6 +42,11 @@
                 "type": "str"
             },
             {
+                "name": "BACKUPS_PATH",
+                "value": "/common/backups",
+                "type": "str"
+            },
+            {
                 "name": "CIPHER",
                 "value": "-aes-256-cbc",
                 "type": "str"
@@ -1031,6 +1036,32 @@
         "h": 222
     },
     {
+        "id": "7728ebae8b36f4f1",
+        "type": "group",
+        "z": "d833cbb1fb389561",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "2c156f5fa7ffc1cd",
+            "a73d85bd1a1ad45a",
+            "25ca2225d9a93f55",
+            "4193408568ff7a87",
+            "32e45c6f886476d4",
+            "d7fb45d9820cce0b"
+        ],
+        "x": 134,
+        "y": 4279,
+        "w": 812,
+        "h": 182
+    },
+    {
         "id": "e94b9f241b089474",
         "type": "junction",
         "z": "d833cbb1fb389561",
@@ -1069,30 +1100,6 @@
         "wires": [
             [
                 "73c897c68103b886"
-            ]
-        ]
-    },
-    {
-        "id": "21a0c062d73f39f0",
-        "type": "junction",
-        "z": "d833cbb1fb389561",
-        "x": 1000,
-        "y": 5700,
-        "wires": [
-            [
-                "d3021a3c310530ad"
-            ]
-        ]
-    },
-    {
-        "id": "0380af892a3ce2e4",
-        "type": "junction",
-        "z": "d833cbb1fb389561",
-        "x": 880,
-        "y": 5640,
-        "wires": [
-            [
-                "21a0c062d73f39f0"
             ]
         ]
     },
@@ -1453,19 +1460,6 @@
         "wires": [
             [
                 "548b79897f77c384"
-            ]
-        ]
-    },
-    {
-        "id": "2d5a354b00574edc",
-        "type": "junction",
-        "z": "d833cbb1fb389561",
-        "x": 580,
-        "y": 4420,
-        "wires": [
-            [
-                "a73d85bd1a1ad45a",
-                "25ca2225d9a93f55"
             ]
         ]
     },
@@ -3036,103 +3030,6 @@
         "wires": [
             [
                 "fb21e4b5b7a346e3"
-            ]
-        ]
-    },
-    {
-        "id": "28d7bad9edc07c0d",
-        "type": "websocket out",
-        "z": "d833cbb1fb389561",
-        "name": "",
-        "server": "92a3b4c89af70947",
-        "client": "",
-        "x": 1130,
-        "y": 5700,
-        "wires": []
-    },
-    {
-        "id": "d3021a3c310530ad",
-        "type": "debug",
-        "z": "d833cbb1fb389561",
-        "name": "ws/install_status websocket",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1180,
-        "y": 5660,
-        "wires": []
-    },
-    {
-        "id": "53bec9c63ee874c4",
-        "type": "function",
-        "z": "d833cbb1fb389561",
-        "name": "___END___",
-        "func": "msg.payload = \"___END___\\n\";\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 730,
-        "y": 5720,
-        "wires": [
-            [
-                "0380af892a3ce2e4"
-            ]
-        ]
-    },
-    {
-        "id": "ff96ad995c92545a",
-        "type": "inject",
-        "z": "d833cbb1fb389561",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 560,
-        "y": 5720,
-        "wires": [
-            [
-                "53bec9c63ee874c4"
-            ]
-        ]
-    },
-    {
-        "id": "9a4c96f945ff90a8",
-        "type": "function",
-        "z": "d833cbb1fb389561",
-        "name": "line",
-        "func": "msg.payload += \"line \\n\";\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 710,
-        "y": 5640,
-        "wires": [
-            [
-                "0380af892a3ce2e4"
             ]
         ]
     },
@@ -5080,61 +4977,6 @@
         ]
     },
     {
-        "id": "f402b49c256e0eb7",
-        "type": "function",
-        "z": "d833cbb1fb389561",
-        "name": "set custom log path",
-        "func": "const user = msg.auth_user;\nmsg.filename = env.get(\"LOG_DIR_PATH\") + \"/install/\" + msg.install_id + \".log\";\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1050,
-        "y": 5480,
-        "wires": [
-            [
-                "861a9fc664c546c5"
-            ]
-        ]
-    },
-    {
-        "id": "751617839e651ca2",
-        "type": "link call",
-        "z": "d833cbb1fb389561",
-        "name": "",
-        "links": [
-            "98ebafed11752a6c"
-        ],
-        "linkType": "static",
-        "timeout": "30",
-        "x": 1560,
-        "y": 5480,
-        "wires": [
-            [
-                "b59467543477d67a"
-            ]
-        ]
-    },
-    {
-        "id": "b59467543477d67a",
-        "type": "debug",
-        "z": "d833cbb1fb389561",
-        "name": "Install log",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1740,
-        "y": 5480,
-        "wires": []
-    },
-    {
         "id": "606aaad183b26615",
         "type": "switch",
         "z": "d833cbb1fb389561",
@@ -5271,26 +5113,6 @@
         "x": 2990,
         "y": 4080,
         "wires": []
-    },
-    {
-        "id": "861a9fc664c546c5",
-        "type": "function",
-        "z": "d833cbb1fb389561",
-        "name": "format payload into log message",
-        "func": "msg.topic = msg.payload.hostname;\n\nmsg.payload = \"[\" + msg.payload.user + \"] [\" + (msg.payload.ts/1000).toFixed(2) + \"s delay] \" + msg.payload.message;\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1290,
-        "y": 5480,
-        "wires": [
-            [
-                "751617839e651ca2"
-            ]
-        ]
     },
     {
         "id": "676da4dad1aafec8",
@@ -9218,6 +9040,7 @@
         "id": "2c156f5fa7ffc1cd",
         "type": "http in",
         "z": "d833cbb1fb389561",
+        "g": "7728ebae8b36f4f1",
         "name": "",
         "url": "/wh/rpi.backup-upload",
         "method": "post",
@@ -9228,7 +9051,8 @@
         "y": 4420,
         "wires": [
             [
-                "2d5a354b00574edc"
+                "32e45c6f886476d4",
+                "d7fb45d9820cce0b"
             ]
         ]
     },
@@ -9236,6 +9060,7 @@
         "id": "a73d85bd1a1ad45a",
         "type": "debug",
         "z": "d833cbb1fb389561",
+        "g": "7728ebae8b36f4f1",
         "name": "Backup upload",
         "active": true,
         "tosidebar": true,
@@ -9253,17 +9078,81 @@
         "id": "25ca2225d9a93f55",
         "type": "http response",
         "z": "d833cbb1fb389561",
+        "g": "7728ebae8b36f4f1",
         "name": "",
         "statusCode": "200",
         "headers": {},
-        "x": 800,
-        "y": 4480,
+        "x": 740,
+        "y": 4320,
         "wires": []
     },
     {
-        "id": "92a3b4c89af70947",
-        "type": "websocket-listener",
-        "path": "/ws/log",
-        "wholemsg": "false"
+        "id": "4193408568ff7a87",
+        "type": "file",
+        "z": "d833cbb1fb389561",
+        "g": "7728ebae8b36f4f1",
+        "name": "",
+        "filename": "filepath",
+        "filenameType": "msg",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 660,
+        "y": 4420,
+        "wires": [
+            [
+                "a73d85bd1a1ad45a"
+            ]
+        ]
+    },
+    {
+        "id": "32e45c6f886476d4",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "7728ebae8b36f4f1",
+        "name": "set file",
+        "func": "msg.payload = msg.req.files[0].buffer;\nmsg.filepath = env.get(\"BACKUPS_PATH\") + \"/\" + msg.req.files[0].originalname;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 4420,
+        "wires": [
+            [
+                "4193408568ff7a87"
+            ]
+        ]
+    },
+    {
+        "id": "d7fb45d9820cce0b",
+        "type": "change",
+        "z": "d833cbb1fb389561",
+        "g": "7728ebae8b36f4f1",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "success",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 4320,
+        "wires": [
+            [
+                "25ca2225d9a93f55"
+            ]
+        ]
     }
 ]
