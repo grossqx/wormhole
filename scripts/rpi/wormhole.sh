@@ -226,7 +226,7 @@ docker_dir="${base_dir}/docker"
 docker_configs="${docker_dir}/configs" && mkdir -p "${docker_configs}"
 docker_stacks="${docker_dir}/stacks" && mkdir -p "${docker_stacks}"
 docker_volumes="${WH_HOME}/docker_storage" && mkdir -p "${docker_volumes}"
-backup_dir="${WH_HOME}/backups" && mkdir -p "${backup_dir}"
+local_backup_dir="${WH_HOME}/backups" && mkdir -p "${local_backup_dir}"
 migration_order="${WH_HOME}/migration_order.sh"
 install_service_name="wormholeinstalld"
 
@@ -282,6 +282,11 @@ case $command in
     -d|docker)
         shift
         docker_command="$1"
+        if [ -z "$WH_REMOTE_BACKUP_DIR" ]; then
+            remote_backup_dir="/home/wormhole/backups/${WH_INSTALL_CONFIG}"
+        else
+            remote_backup_dir="${WH_REMOTE_BACKUP_DIR}/${WH_INSTALL_CONFIG}"
+        fi
         case "$docker_command" in
             -u|update)
                 wh_log "Starting docker configuration update..."
@@ -303,6 +308,16 @@ case $command in
                 ${base_dir}/utils/docker_backups.sh backup $@ || exit 1
                 wh_log "Restarting containers..."
                 ${base_dir}/utils/docker_manage.sh start $@ || exit 1
+                if [ -z "$WH_REMOTE_BACKUP_DESTINATION" ]; then
+                    wh_log "Remote backup destination not set. Skipping sync to remote."
+                else
+                    if [[ "$WH_REMOTE_BACKUP_DESTINATION" == "server" ]]; then
+                        sync_mode="http-up"
+                    else
+                        sync_mode="up"
+                    fi
+                    ${base_dir}/utils/sync_backups.sh "${sync_mode}" "${local_backup_dir}" "${remote_backup_dir}" "${WH_REMOTE_BACKUP_DESTINATION}"
+                fi
                 wh_log "Completed docker backup"
                 ;;
             -fr|full-restore)
@@ -326,6 +341,32 @@ case $command in
                 wh_log "Restarting containers..."
                 ${base_dir}/utils/docker_manage.sh start $@ || exit 1
                 wh_log "Completed docker restore process"
+                ;;
+            -st|sync-test)
+                shift
+                test_destination=$1
+                if [ -z "$test_destination" ]; then
+                    echo "No remote destination provided. Testing default destination..."
+                    test_destination=${WH_REMOTE_BACKUP_DESTINATION}
+                fi
+                if [ -z "$test_destination" ]; then
+                    echo "Error: No remote destination provided."
+                    exit 1
+                fi
+                ${base_dir}/utils/sync_backups.sh test "${local_backup_dir}" "${remote_backup_dir}" "${test_destination}"
+                ;;
+            -pb|pull-backup)
+                shift
+                pull_destination=$1
+                if [ -z "$pull_destination" ]; then
+                    echo "No remote source provided. Testing default source..."
+                    pull_destination=${WH_REMOTE_BACKUP_DESTINATION}
+                fi
+                if [ -z "$pull_destination" ]; then
+                    echo "Error: No remote source provided."
+                    exit 1
+                fi             
+                ${base_dir}/utils/sync_backups.sh down "${local_backup_dir}" "${remote_backup_dir}" "${pull_destination}"
                 ;;
             *)
                 echo "docker what?"

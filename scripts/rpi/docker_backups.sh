@@ -141,7 +141,7 @@ case "$MODE" in
             echo "Stacks directory not being restored (no path found)"
         else
             current_process=$((current_process + 1))
-            OUTPUT_DIR="${stacks_path}"
+            OUTPUT_DIR="${stacks_path}" && mkdir -p ${OUTPUT_DIR}
             BACKUP_CAT_DIR="${backup_dir}/docker/stacks"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} "stacks")            
             if [ "$?" -eq 0 ]; then
@@ -158,7 +158,7 @@ case "$MODE" in
         echo "Total data mounts for restore: ${#BACKUP_MOUNTS_STORAGE[@]}"
         for MOUNT in "${BACKUP_MOUNTS_STORAGE[@]}"; do
             current_process=$((current_process + 1))
-            OUTPUT_DIR="${docker_volumes}/${MOUNT}"
+            OUTPUT_DIR="${docker_volumes}/${MOUNT}" && mkdir -p ${OUTPUT_DIR}
             BACKUP_CAT_DIR="${backup_dir}/docker/storage"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} ${MOUNT}) 2>&1
             if [ "$?" -eq 0 ]; then
@@ -175,7 +175,7 @@ case "$MODE" in
         echo "Total configuration mounts for restore: ${#BACKUP_MOUNTS_CONFIG[@]}"
         for MOUNT in "${BACKUP_MOUNTS_CONFIG[@]}"; do
             current_process=$((current_process + 1))
-            OUTPUT_DIR="${docker_configs}/${MOUNT}"
+            OUTPUT_DIR="${docker_configs}/${MOUNT}" && mkdir -p ${OUTPUT_DIR}
             BACKUP_CAT_DIR="${backup_dir}/docker/configs"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} ${MOUNT}) 
             if [ "$?" -eq 0 ]; then
@@ -192,7 +192,7 @@ case "$MODE" in
         echo "Total uncategorized mounts for restore: ${#BACKUP_MOUNTS_OTHER[@]}"
         for MOUNT in "${BACKUP_MOUNTS_OTHER[@]}"; do
             current_process=$((current_process + 1))
-            OUTPUT_DIR="$MOUNT"
+            OUTPUT_DIR="$MOUNT" && mkdir -p ${OUTPUT_DIR}
             BACKUP_CAT_DIR="${backup_dir}/docker/other"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} $(basename "$MOUNT")) 
             if [ "$?" -eq 0 ]; then

@@ -113,6 +113,18 @@ wormhole-installer --help
 2. If Rapsbery Pi was previously configured to boot from a different device type, physically disconnect those storage devices or change the boot order beforehand. They can be reconnected once the installer on the Pi passes the first stage.
 3. Wait
 
+# Backups
+
+To enable backups, add env variables to /etc/environment file on the Node:
+
+- To upload backups to the wormhole server over http(s), add line ```WH_REMOTE_BACKUP_DESTINATION=server```.
+
+-  To upload backups via ssh, add line ```WH_REMOTE_BACKUP_DESTINATION=<username>@<host>:<port>```.
+Edit username, port and host. Skip the port and ":" to use default ssh port 22. Manually generate a key and copy the identity to the destination host.
+
+- To set a custom backup directory, add line ```WH_REMOTE_BACKUP_DIR=<path>```.
+This directory should exist on the  ssh server. Defaults to  ```/home/wormhole/backups```
+
 # Uninstallation
 
 ### Client:
@@ -134,10 +146,9 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 # TODOs:
 
-- backup sync
 - send default wg peer to the server
-- restore docker volumes from backup
 - ufw
+- add compression to wh-backup and restore
 
 # Issues:
 
