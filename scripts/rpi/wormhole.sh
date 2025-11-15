@@ -235,7 +235,7 @@ export docker_dir
 export docker_configs
 export docker_stacks
 export docker_volumes
-export backup_dir
+export local_backup_dir
 export -f wh-backup
 export -f wh-restore
 export -f wh-generate-backup-basename
@@ -283,9 +283,9 @@ case $command in
         shift
         docker_command="$1"
         if [ -z "$WH_REMOTE_BACKUP_DIR" ]; then
-            remote_backup_dir="/home/wormhole/backups/${WH_INSTALL_CONFIG}"
+            remote_backup_dir="/home/wormhole/backups/${WH_INSTALL_ID}"
         else
-            remote_backup_dir="${WH_REMOTE_BACKUP_DIR}/${WH_INSTALL_CONFIG}"
+            remote_backup_dir="${WH_REMOTE_BACKUP_DIR}/${WH_INSTALL_ID}"
         fi
         case "$docker_command" in
             -u|update)
@@ -316,7 +316,7 @@ case $command in
                     else
                         sync_mode="up"
                     fi
-                    ${base_dir}/utils/sync_backups.sh "${sync_mode}" "${local_backup_dir}" "${remote_backup_dir}" "${WH_REMOTE_BACKUP_DESTINATION}"
+                    ${base_dir}/utils/sync_backups.sh "${sync_mode}" "${local_backup_dir}/docker" "${remote_backup_dir}" "${WH_REMOTE_BACKUP_DESTINATION}"
                 fi
                 wh_log "Completed docker backup"
                 ;;
@@ -366,7 +366,7 @@ case $command in
                     echo "Error: No remote source provided."
                     exit 1
                 fi             
-                ${base_dir}/utils/sync_backups.sh down "${local_backup_dir}" "${remote_backup_dir}" "${pull_destination}"
+                ${base_dir}/utils/sync_backups.sh down "${local_backup_dir}" "${remote_backup_dir}/docker" "${pull_destination}"
                 ;;
             *)
                 echo "docker what?"

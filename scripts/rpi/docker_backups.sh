@@ -70,6 +70,7 @@ function categorize_mounts() {
             fi
         done
         echo "Found ${total_to_process} total mounted directories to ${MODE}."
+        echo "Local backup directory '${local_backup_dir}'"
     elif [ ${#BACKUP_MOUNTS[@]} -eq 0 ]; then
         echo "No valid mounts found to ${MODE}."
     fi
@@ -90,7 +91,7 @@ case "$MODE" in
             current_process=$((current_process + 1))
             echo "Stacks directory:" && DESIGNATED_MOUNT="${stacks_path}"
             echo " - [${current_process}/${total_to_process}] (STACKS) $DESIGNATED_MOUNT"
-            dest="${backup_dir}/docker/stacks" && mkdir -p "$dest"
+            dest="${local_backup_dir}/docker/stacks" && mkdir -p "$dest"
             if ! wh-backup "$DESIGNATED_MOUNT" "$dest"; then
                 echo "Error: STACKS backup FAILED (wh-backup exit code: $?). Continuing..." >&2
                 OPERATION_FAILED=1
@@ -101,7 +102,7 @@ case "$MODE" in
         for MOUNT in "${BACKUP_MOUNTS_STORAGE[@]}"; do
             current_process=$((current_process + 1))
             echo " - [${current_process}/${total_to_process}] (DATA) $MOUNT"
-            dest="${backup_dir}/docker/storage" && mkdir -p "$dest"
+            dest="${local_backup_dir}/docker/storage" && mkdir -p "$dest"
             if ! wh-backup "${docker_volumes}/${MOUNT}" "$dest"; then
                 echo "Error: DATA mount '$MOUNT' backup FAILED (wh-backup exit code: $?). Continuing..." >&2
                 OPERATION_FAILED=1
@@ -112,7 +113,7 @@ case "$MODE" in
         for MOUNT in "${BACKUP_MOUNTS_CONFIG[@]}"; do
             current_process=$((current_process + 1))
             echo " - [${current_process}/${total_to_process}] (CONF) $MOUNT"
-            dest="${backup_dir}/docker/configs" && mkdir -p "$dest"
+            dest="${local_backup_dir}/docker/configs" && mkdir -p "$dest"
             if ! wh-backup "${docker_configs}/${MOUNT}" "$dest"; then
                 echo "Error: CONFIG mount '$MOUNT' backup FAILED (wh-backup exit code: $?). Continuing..." >&2
                 OPERATION_FAILED=1
@@ -123,7 +124,7 @@ case "$MODE" in
         for MOUNT in "${BACKUP_MOUNTS_OTHER[@]}"; do
             current_process=$((current_process + 1))
             echo " - [${current_process}/${total_to_process}] (OTHER) $MOUNT"
-            dest="${backup_dir}/docker/other" && mkdir -p "$dest"
+            dest="${local_backup_dir}/docker/other" && mkdir -p "$dest"
             if ! wh-backup "$MOUNT" "$dest"; then
                 echo "Error: OTHER mount '$MOUNT' backup FAILED (wh-backup exit code: $?). Continuing..." >&2
                 OPERATION_FAILED=1
@@ -142,7 +143,7 @@ case "$MODE" in
         else
             current_process=$((current_process + 1))
             OUTPUT_DIR="${stacks_path}" && mkdir -p ${OUTPUT_DIR}
-            BACKUP_CAT_DIR="${backup_dir}/docker/stacks"
+            BACKUP_CAT_DIR="${local_backup_dir}/docker/stacks"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} "stacks")            
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (STACKS) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
@@ -159,7 +160,7 @@ case "$MODE" in
         for MOUNT in "${BACKUP_MOUNTS_STORAGE[@]}"; do
             current_process=$((current_process + 1))
             OUTPUT_DIR="${docker_volumes}/${MOUNT}" && mkdir -p ${OUTPUT_DIR}
-            BACKUP_CAT_DIR="${backup_dir}/docker/storage"
+            BACKUP_CAT_DIR="${local_backup_dir}/docker/storage"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} ${MOUNT}) 2>&1
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (DATA) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
@@ -176,7 +177,7 @@ case "$MODE" in
         for MOUNT in "${BACKUP_MOUNTS_CONFIG[@]}"; do
             current_process=$((current_process + 1))
             OUTPUT_DIR="${docker_configs}/${MOUNT}" && mkdir -p ${OUTPUT_DIR}
-            BACKUP_CAT_DIR="${backup_dir}/docker/configs"
+            BACKUP_CAT_DIR="${local_backup_dir}/docker/configs"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} ${MOUNT}) 
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (CONF) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
@@ -193,7 +194,7 @@ case "$MODE" in
         for MOUNT in "${BACKUP_MOUNTS_OTHER[@]}"; do
             current_process=$((current_process + 1))
             OUTPUT_DIR="$MOUNT" && mkdir -p ${OUTPUT_DIR}
-            BACKUP_CAT_DIR="${backup_dir}/docker/other"
+            BACKUP_CAT_DIR="${local_backup_dir}/docker/other"
             INPUT_FILE=$(wh-get-latest-backup ${BACKUP_CAT_DIR} $(basename "$MOUNT")) 
             if [ "$?" -eq 0 ]; then
                 echo " - [${current_process}/${total_to_process}] (OTHER) Restoring $(basename "$INPUT_FILE") to $OUTPUT_DIR"
