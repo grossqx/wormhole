@@ -11,6 +11,7 @@ services:
     hostname: unbound
     volumes:
       - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
+      - ${STORAGE_PATH}/unbound/logs:/opt/unbound/etc/unbound/var/log
     networks:
       private_network:
         ipv4_address: ${UNBOUND_IP}
