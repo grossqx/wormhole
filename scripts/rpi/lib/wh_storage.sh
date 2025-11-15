@@ -88,6 +88,7 @@ function wh-cleanup-oldest-backup() {
 function wh-backup() {
     local source_dir="$1"
     local output_dir="$2"
+    local set_filename="$3"
     local backup_filename
     local exit_code
     if [ -z "$source_dir" ] || [ -z "$output_dir" ]; then
@@ -103,7 +104,11 @@ function wh-backup() {
         echo "Error: Output directory '$output_dir' does not exist." >&2
         return 1
     fi
-    backup_filename="${output_dir}/$(wh-generate-backup-basename "$source_dir").tar.enc"
+    if [ -z "$set_filename" ]; then
+        backup_filename="${output_dir}/$(wh-generate-backup-basename "$source_dir").tar.enc"
+    else
+        backup_filename="${output_dir}/${set_filename}.tar.enc"
+    fi
     echo "Starting backup of '$source_dir' to '$backup_filename'"
     (
         cd "$source_dir" || { echo "Error: Cannot change to source directory $source_dir" >&2; return 1; }

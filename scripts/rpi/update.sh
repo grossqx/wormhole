@@ -72,8 +72,8 @@ exec_stop_path_template="___EXEC_STOP_PATH___"
 manifest="${new_distro_dir}/rpi/update.manifest.json"
 
 # Get service file exec paths
-wormholed_exec_start_path=$(jq -r ".files.wormholed-start.path" "$manifest")
-wormholed_exec_stop_path=$(jq -r ".files.wormholed-stop.path" "$manifest")
+wormholed_exec_start_path=$(jq -r '.files["wormholed-start"].path' "$manifest")
+wormholed_exec_stop_path=$(jq -r '.files["wormholed-stop"].path' "$manifest")
 wormholeinstalld_exec_path=$(jq -r ".files.wormholeinstalld.path" "$manifest")
 wormholed_exec_start=$(eval echo "$wormholed_exec_start_path")
 wormholed_exec_stop=$(eval echo "$wormholed_exec_stop_path")

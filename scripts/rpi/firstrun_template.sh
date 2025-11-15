@@ -220,6 +220,7 @@ extract_file "docker_update_config" 2>&1 | log
 extract_file "docker_update_env" 2>&1 | log
 extract_file "docker_manage" 2>&1 | log
 extract_file "docker_backups" 2>&1 | log
+extract_file "sync_backups" 2>&1 | log
 extract_file "ufw_config" 2>&1 | log
 extract_file "nfs_config" 2>&1 | log
 extract_file "git_install" 2>&1 | log

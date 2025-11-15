@@ -39,7 +39,7 @@ function sdreport_success() {
 
 function main_loop(){
     # Send telemetry to the server
-    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry"
+    wh_send_payload "$(rpi-sysinfo --json)" "${WH_SERVER_API_URL}/wh/telemetry" > /dev/null
 }
 
 check_new_boot_devices() {
@@ -191,34 +191,34 @@ else
 fi
 
 # Test internet connection. 
+wifi_message=""
 check_internet
 online=$?
 if [[ $online -eq 0 ]]; then
-    echo "Internet connection is confirmed."
-    wh_log "Starting up ${service_name}"
+    wifi_message="${wifi_message}Internet connection active. "
     if is_ethernet_active; then
-        echo "Connection is via Ethernet."
+        wifi_message="${wifi_message}Connected via Ethernet. "
         if ! is_wifi_blocked; then
-            echo "Action: Wi-Fi is currently enabled. Disabling to optimize power."
-            wh_log "Wi-Fi is currently enabled. Disabling to optimize power."
+            wifi_message="${wifi_message}Wi-Fi currently enabled. Disabling to optimize power. "
             rfkill block wifi
         else
-            echo "Wi-Fi is already disabled. No change needed."
+            wifi_message="${wifi_message}Wi-Fi already disabled. No change needed. "
         fi
     else
-        echo "Internet is up, but no Ethernet link is active. Keeping Wi-Fi enabled."
+        wifi_message="${wifi_message}No Ethernet link is active. Keeping Wi-Fi enabled. "
     fi
 else
-    echo "Warning: Internet connection is currently DOWN."
-    wh_log_local "Starting up ${service_name}"
+    wifi_message="${wifi_message}Warning: Internet connection is currently DOWN. "
     if is_wifi_blocked; then
-        echo "Action: Wi-Fi is disabled and internet is down. Enabling Wi-Fi."
-        wh_log_local "Wi-Fi is disabled and internet is down. Enabling Wi-Fi."
+        wifi_message="${wifi_message}Enabling Wi-Fi. "
         rfkill unblock wifi
     else
-        echo "Wi-Fi is already enabled. No change needed."
+        wifi_message="${wifi_message}Wi-Fi already enabled. No change needed. "
     fi
 fi
+
+wh_log "Starting up ${service_name}"
+wh_log "${wifi_message}"
 
 # Check boot media
 current_boot_path=$(mount | grep " / " | awk '{print $1}')

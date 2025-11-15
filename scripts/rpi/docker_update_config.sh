@@ -54,6 +54,8 @@ rm -f "${new_distro_tar_enc}"
 echo "Contents of temporary directory:"
 ls "${new_distro_dir}"
 
+rm -rf "${docker_dir}"/*
+
 echo "Copying new contents to ${docker_dir}..."
 cp -r "${new_distro_dir}/." "${docker_dir}"
 if [[ $? -ne 0 ]]; then

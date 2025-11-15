@@ -175,7 +175,7 @@ function get_install_progress() {
 
 # The function to detect progress numbers in a given line.
 # It looks for patterns like [x/y] or [x]. If a total is available, it outputs two numbers. If not, it outputs only one.
-function parse_progress() {
+function parse_ongoing_step() {
     local line="$1"
     # Try to extract the two-number pattern first
     result=$(echo "$line" | sed -nE 's/.*\[([0-9.]+)\/([0-9.]+)\](.*)$/\1 \2/p')
@@ -192,9 +192,63 @@ function parse_progress() {
     return 1
 }
 
+function parse_stage_progress(){
+    local line="$1"
+    local min="$2"
+    local max="$3"
+    local stage_min="$4"
+    local stage_max="$5"
+    script_progress=$(parse_ongoing_step "$line")
+    if [ $? -eq 0 ]; then
+        stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) "$min" $(echo "$script_progress" | cut -d ' ' -f 2) "$stage_min" "$stage_max")
+        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${max}" "${install_stage}" "${number_of_stages}")"
+    fi
+}
+
+function parse_apt_progress() {
+    local line="$1"
+    local min_val="$2"
+    local max_val="$3"
+    local stage_min="$4"
+    local stage_max="$5"
+    if [[ $_APT_TOTAL_PACKAGES -eq 0 ]]; then
+        if echo "$line" | grep -qP '\d+ upgraded, \d+ newly installed, \d+ to remove'; then
+            local upgraded_packages=$(echo "$line" | grep -oP '\d+(?= upgraded)') || upgraded_packages=0
+            local newly_installed=$(echo "$line" | grep -oP '\d+(?= newly installed)') || newly_installed=0
+            local to_remove=$(echo "$line" | grep -oP '\d+(?= to remove)') || to_remove=0
+            _APT_TOTAL_PACKAGES=$((upgraded_packages + newly_installed + to_remove))
+            _APT_TOTAL_TASKS=$((_APT_TOTAL_PACKAGES * 3))
+            _APT_CURRENT_TASK=0
+            echo "[${wh_prefix}] Installing $_APT_TOTAL_PACKAGES packages. Supressing the log for next $_APT_TOTAL_TASKS tasks." | log
+            return
+        fi
+    fi
+    if [[ $_APT_TOTAL_TASKS -le 0 ]]; then
+        return 1
+    fi
+    local new_progress=0  
+    if [[ "$line" =~ Get:([0-9]+) ]]; then
+        local get_task="${BASH_REMATCH[1]}"
+        if [[ $get_task -gt $_APT_CURRENT_TASK ]]; then
+            _APT_CURRENT_TASK=$get_task && new_progress=1
+        fi
+    elif [[ "$line" =~ Preparing\ to\ unpack ]]; then
+        _APT_CURRENT_TASK=$((_APT_CURRENT_TASK + 1)) && new_progress=1
+    elif [[ "$line" =~ Setting\ up\  ]]; then
+        _APT_CURRENT_TASK=$((_APT_CURRENT_TASK + 1)) && new_progress=1
+    fi
+    if [[ $new_progress -eq 1 ]]; then
+        if [[ $_APT_CURRENT_TASK -gt $_APT_TOTAL_TASKS ]]; then
+            _APT_CURRENT_TASK=$_APT_TOTAL_TASKS
+        fi
+        local stage_progress=$(remap_value "$_APT_CURRENT_TASK" "0" "$_APT_TOTAL_TASKS" "$stage_min" "$stage_max")
+        log_progress_percent "$(get_install_progress "${stage_progress}" "${min_val}" "${max_val}" "${install_stage}" "${number_of_stages}")"
+    fi
+}
+
 function move_on_to_stage() {
     local new_stage="$1"
-    echo "${marker_progress}$(get_install_progress 0 0 1 ${new_stage} ${number_of_stages})${marker_close}" | log
+    # echo "${marker_progress}$(get_install_progress 0 0 1 ${new_stage} ${number_of_stages})${marker_close}" | log
     echo "[${wh_prefix}] Finished stage ${install_stage}. Moving to stage ${new_stage}" | log 
     echo "$new_stage" | tee "$checkpoint_stage" >/dev/null
     echo "Rebooting $(hostname) in ${stage_reboot_wait} seconds..." | log
@@ -280,7 +334,7 @@ install_log_path="${WH_HOME}/wormhole_install.log"
 third_party_scripts_dir="${WH_PATH}/third_party"
 get_pollrate_endpoint="${WH_SERVER_API_URL}/wh/get_pollrate_rpi"
 install_log_endpoint="${WH_SERVER_API_URL}/wh/install_log_write"
-check_config_endpoint="${WH_SERVER_API_URL}/wh/rpi.check_config"
+configuration_endpoint="${WH_SERVER_API_URL}/wh/rpi.configuration"
 checkpoint_boot="${WH_HOME}/.checkpoint-boot"
 checkpoint_stage="${WH_HOME}/.checkpoint-stage"
 firstrun_log_path="/boot/firstrun.log"
@@ -308,8 +362,10 @@ fi
 message="[${wh_prefix}] Running Stage #${install_stage}, Boot #${boot_number}"
 sdreport "$message"
 
-# Boot 2 is the first boot after firstboot
 if [ $boot_number -eq 2 ]; then
+    # Enable to disable WiFi if it needs to be done
+    systemctl start wormholed.service | log
+
     # Packages required for log function to work
     echo "${marker_state}Installing dependencies${marker_close}" | tee -a "${install_log_path}"
     echo "$message" | tee -a "${install_log_path}"
@@ -317,24 +373,19 @@ if [ $boot_number -eq 2 ]; then
     apt-get install -y ${package_list_dependency} | while read -r line; do
         echo "$line" >> "${install_log_path}"
     done
-    
+
     systemctl enable wormholed.service | log
-    systemctl start wormholed.service | log
+    systemctl restart wormholed.service | log
 
     # Catch the server up to logs from previous boot
     log_progress_state "Checking firstrun log"
     cat "${install_log_path}" | while read -r line; do
         echo "$line" | log
-        script_progress=$(parse_progress "$line")
-        if [ $? -eq 0 ]; then
-            stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 1 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-            log_progress_percent "$(get_install_progress "${stage_progress}" "0" "1" "${install_stage}" "${number_of_stages}")"
-        fi
+        parse_stage_progress "${line}" 0 1 0 1
     done
-    # Remove firstrun.sh log and firstrun.sh backup
-    rm -f "$firstrun_log_path" "$firstrun_backup"
 
-    # Real-time logging can start now
+    rm -f "$firstrun_log_path" "$firstrun_backup" # Remove firstrun.sh log and firstrun.sh backup
+
     log_progress_state "Stage ${install_stage} / Starting the installation"
     echo "3..." | log
     echo "2.." | log
@@ -369,7 +420,7 @@ echo "[${wh_prefix}] Getting authenticated by the server..." | log
 payload=$(jq --null-input \
             --arg topic "check" \
             '{topic: $topic}')
-wh_send_payload "$payload" "$check_config_endpoint" | log
+wh_send_payload "$payload" "$configuration_endpoint" | log
 if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
     echo "[${wh_prefix}] Hardware API key recognized by the server." | log
 else
@@ -413,71 +464,37 @@ else
     echo "[${wh_prefix}] Failed to get server's pollrate - setting to ${min_time_between_logs_ms} ms." | log
 fi
 
+# These variables are used by the parse_apt_progress
+declare -i _APT_TOTAL_PACKAGES=0
+declare -i _APT_TOTAL_TASKS=0
+declare -i _APT_CURRENT_TASK=0
+
 case $install_stage in
     1)  log_progress_state "Stage ${install_stage} / Updating the OS"
-        # apt-upgrade progress tracking
-        declare -i total_packages=0
-        declare -i total_tasks=0
-        declare -i current_task=0
         ${WH_PATH}/installer/initial_update.sh | while read -r line; do
-            if [[ $total_packages -eq 0 ]]; then # Get the total number of packages and calculate total tasks.
-                if echo "$line" | grep -qP '\d+ upgraded, \d+ newly installed, \d+ to remove'; then
-                    upgraded_packages=$(echo "$line" | grep -oP '\d+(?= upgraded)')
-                    newly_installed=$(echo "$line" | grep -oP '\d+(?= newly installed)')
-                    to_remove=$(echo "$line" | grep -oP '\d+(?= to remove)')
-                    total_packages=$((upgraded_packages + newly_installed + to_remove))
-                    total_tasks=$((total_packages * 3))
-                    echo "[${wh_prefix}] Total tasks (upgrade ${upgraded_packages} + install ${newly_installed} + remove ${to_remove}): $total_packages" | log
-                fi
-            fi
-            if [[ $total_tasks -gt 0 ]]; then
-                if [[ "$line" =~ Get:([0-9]+) ]]; then # Check for the downloading phase (Get:N).
-                    current_task="${BASH_REMATCH[1]}"
-                    log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
-                elif [[ "$line" =~ Preparing\ to\ unpack ]]; then # Check for the unpacking/installing phase.
-                    current_task=$((current_task + 1))
-                    log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
-                elif [[ "$line" =~ Setting\ up\  ]]; then # Check for the setting up phase.
-                    current_task=$((current_task + 1))
-                    log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
-                fi
-            else
-                echo "$line" | log
-            fi
+            parse_apt_progress "${line}" 0 1 0 1 || echo ${line} | log
         done
         move_on_to_stage "2"
         ;;
     2)
-        stage_progress=0.0
-        stage_max_progress=4.0
         log_progress_state "Stage ${install_stage} / Installing git"
         ${WH_PATH}/installer/git_install.sh --lfs | while read -r line; do
-            echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 11 0 3
+            parse_apt_progress "${line}" 0 11 1 2 || echo ${line} | log
         done
         log_progress_state "Stage ${install_stage} / Installing docker"
         ${WH_PATH}/installer/docker_install.sh | while read -r line; do
-            echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 1 4)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 11 0 8
+            parse_apt_progress "${line}" 0 11 6 7 || echo ${line} | log
         done
         move_on_to_stage "3"
         ;;
-    3)  
-        # Stage progress tracking
-        declare -i total_packages=0
-        declare -i current_task=0
-        total_tasks=0
-        first_part_progress=2 # How much total progress is relative to first part's progress
+    3)
+        read -r -a new_package_array <<< "$package_list_additional"
         number_of_repositories=${#repositories_to_clone[@]}
         number_of_third_party_scripts=${#third_party_scripts[@]}
+        number_of_packages=${#new_package_array[@]}
+        total_tasks=$((number_of_repositories + number_of_third_party_scripts + number_of_packages))
         log_progress_state "Stage ${install_stage} / Installing additional packages"
         echo "[${wh_prefix}] This stage will install packages:" | log
         to_install=($package_list_additional)
@@ -485,33 +502,9 @@ case $install_stage in
             echo "[${wh_prefix}] - $item" | log
         done
         sudo apt-get install -y ${package_list_additional} | while read -r line; do
-            if [[ $total_packages -eq 0 ]]; then # Get the total number of packages and calculate total tasks.
-                if echo "$line" | grep -qP '\d+ upgraded, \d+ newly installed, \d+ to remove'; then
-                    upgraded_packages=$(echo "$line" | grep -oP '\d+(?= upgraded)')
-                    newly_installed=$(echo "$line" | grep -oP '\d+(?= newly installed)')
-                    to_remove=$(echo "$line" | grep -oP '\d+(?= to remove)')
-                    total_packages=$((upgraded_packages + newly_installed + to_remove))
-                    echo "[${wh_prefix}] Total tasks (upgrade ${upgraded_packages} + install ${newly_installed} + remove ${to_remove}): $total_packages" | log
-                    total_tasks=$(echo "($total_tasks + ($total_packages * 3)) * $first_part_progress" | bc)
-                fi
-            fi
-            if [[ $total_tasks -gt 0 ]]; then
-                if [[ "$line" =~ Get:([0-9]+) ]]; then # Check for the downloading phase (Get:N).
-                    current_task="${BASH_REMATCH[1]}"
-                    log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
-                elif [[ "$line" =~ Preparing\ to\ unpack ]]; then # Check for the unpacking/installing phase.
-                    current_task=$((current_task + 1))
-                    log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
-                elif [[ "$line" =~ Setting\ up\  ]]; then # Check for the setting up phase.
-                    current_task=$((current_task + 1))
-                    log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
-                fi
-            else
-                echo "$line" | log
-            fi
+            parse_apt_progress "${line}" 0 "${total_tasks}" 0 "${number_of_packages}" || echo ${line} | log
         done
-        current_task=$((number_of_repositories + number_of_third_party_scripts))
-        total_tasks=$(echo "$current_task * $first_part_progress" | bc)
+        current_task=$number_of_packages
         log_progress_state "Stage ${install_stage} / Cloning git repositories"
         for repo_url in "${repositories_to_clone[@]}"; do
             repo_name=$(basename ${repo_url} | sed 's/\.git$//')
@@ -521,7 +514,7 @@ case $install_stage in
                 echo "$line" | log
             done
             current_task=$((current_task + 1))
-            log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
+            log_progress_percent "$(get_install_progress "${current_task}" "0" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
         done
         log_progress_state "Stage ${install_stage} / Downloading third-party scripts"
         for script_url in "${third_party_scripts[@]}"; do
@@ -535,87 +528,75 @@ case $install_stage in
             done
             chmod +x "$script_desination"
             current_task=$((current_task + 1))
-            log_progress_percent "$(get_install_progress "${current_task}" "1" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
+            log_progress_percent "$(get_install_progress "${current_task}" "0" "${total_tasks}" "${install_stage}" "${number_of_stages}")"
         done
         log_progress_state "Stage ${install_stage} / Enabling services"
         systemctl enable fail2ban | log
         move_on_to_stage "4"
         ;;
     4)
-        stage_progress=0.0
-        stage_max_progress=3.0
         ${WH_PATH}/wormhole.sh --version | log
         log_progress_state "Stage ${install_stage} / Updating docker configs"
-        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh docker update 2>&1 | while read -r line; do
             echo "$line" | log
+            parse_stage_progress "${line}" 1 6 1 2
         done
-        stage_progress=1.0
         log_progress_state "Stage ${install_stage} / Pulling docker images"
-        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh stack pull 2>&1 | while read -r line; do
-            if ! echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer\| Verifying Checksum\| Download complete\| Pull complete"; then
+            if echo "$line" | grep -q " Extracting \| Downloading \| Waiting\| Pulling fs layer\| Verifying Checksum\| Download complete\| Pull complete"; then
+                continue
+            else
                 echo "$line" | log
+                parse_stage_progress "${line}" 1 6 2 5
             fi
         done
-        stage_progress=2.0
         log_progress_state "Stage ${install_stage} / Docker creating containers"
-        log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
         ${WH_PATH}/wormhole.sh stack create 2>&1 | while read -r line; do
             echo "$line" | log
+            parse_stage_progress "${line}" 1 6 5 6
         done
         move_on_to_stage "5"
         ;;
     5)
-        stage_max_progress=3.0
         log_progress_state "Stage ${install_stage} / Migration planning"
         ${WH_PATH}/utils/migration.sh | while read -r line; do
             echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 11 0 3
         done
         log_progress_state "Stage ${install_stage} / NFS configuration"
         ${WH_PATH}/installer/nfs_config.sh -i | while read -r line; do
-            echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 1 2)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+            if echo "$line" | grep -q "debconf: "; then
+                continue
+            else
+                parse_stage_progress "${line}" 0 11 3 10
+                parse_apt_progress "${line}" 0 11 3 4 || echo ${line} | log
             fi
         done
         log_progress_state "Stage ${install_stage} / UFW configuration"
         ${WH_PATH}/installer/ufw_config.sh | while read -r line; do
+            parse_stage_progress "${line}" 0 11 10 11
             echo "$line" | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 2 3)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
         done
         move_on_to_stage "6"
         ;;
     $number_of_stages)
-        stage_max_progress=2.0
         log_progress_state "Stage ${install_stage} / Running benchmarks"
         ${WH_PATH}/utils/benchmark.sh | while read -r line; do
             echo $line | log
-            script_progress=$(parse_progress "$line")
-            if [ $? -eq 0 ]; then
-                stage_progress=$(remap_value $(echo "$script_progress" | cut -d ' ' -f 1) 0 $(echo "$script_progress" | cut -d ' ' -f 2) 0 1)
-                log_progress_percent "$(get_install_progress "${stage_progress}" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
-            fi
+            parse_stage_progress "${line}" 0 1 0 1
         done
         log_progress_state "Stage ${install_stage} / Finalizing installation"
         sdreport "Intallation finished. Performing final steps"
         echo "Intallation finished. Performing final steps" | log
+        echo "Applying autoupdate settings" | log
+        payload=$(jq --null-input --arg topic "get" '{topic: $topic}')
+        configuration_data=$(wh_send_payload "${payload}" "$configuration_endpoint")
+        wormhole auto-update self $(echo $configuration_data | jq -r '."autoupdate-self"') | log
+        wormhole auto-update system $(echo $configuration_data | jq -r '."autoupdate-system"') | log
         echo "Disabling ${installer_name} and removing checkpoint files" | log
         systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log
-        rm -f "${checkpoint_stage}" | log 
-        log_progress_percent "$(get_install_progress "2" "0" "${stage_max_progress}" "${install_stage}" "${number_of_stages}")"
+        rm -f "${checkpoint_stage}" | log         
         log_progress_state "Stage ${install_stage} / Rebooting"
         echo "$(hostname) will reboot in 1 minute. If migration is planned, it will be executed on next boot." | log
         

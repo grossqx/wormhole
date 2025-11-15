@@ -1,9 +1,8 @@
 #!/bin/bash
 
 CONFIG_PATH=$1
-DEVICE_MAC=$2
-DEVICE_INTERFACE=$3
-PRINT_TO_FILE=$4
+RPI_MAC=$2
+PRINT_TO_FILE=$3
 
 if [[ "$PRINT_TO_FILE" != "true" ]]; then
     source ${base_dir}/res/theme.env
@@ -28,8 +27,8 @@ echo -e "${T_BOLD}Router configuration${T_NC} - ${T_ITALIC}these have to be conf
 echo -e "${T_BLUE}1. DHCP - static IP address:${T_NC}"
 echo -e "\thostname: ${T_BLUE}${RPI_HOSTNAME}${T_NC}"
 echo -e "\tinternal IP address: ${T_BLUE}${display_ip}${T_NC}" 
-if [[ ! -z "$DEVICE_MAC" ]]; then
-    echo -e "\tMAC: ${T_BLUE}${DEVICE_MAC}${T_NC} (${DEVICE_INTERFACE})"
+if [[ ! -z "$RPI_MAC" ]]; then
+    echo -e "\tMAC: ${T_BLUE}${RPI_MAC}${T_NC}"
 fi
 echo -e "${T_BLUE}2. Port forwarding rules:${T_NC}"
 echo -e "\tWireguard VPN: port ${T_BLUE}${RPI_WH_PORT}${T_NC} at ${T_BLUE}${display_ip}${T_NC} ${T_BLUE}(UDP protocol)${T_NC}" 

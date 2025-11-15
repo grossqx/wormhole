@@ -10,7 +10,7 @@ services:
       - DOCKGE_STACKS_DIR=/opt/stacks
     restart: unless-stopped
     ports:
-      - 5001:5001
+      - ${DOCKGE_UI_PORT}:5001
   uptime-kuma:
     container_name: uptime-kuma
     image: louislam/uptime-kuma:1
@@ -18,12 +18,11 @@ services:
       - ${STORAGE_PATH}/uptime-kuma/data:/app/data
     restart: always
     ports:
-      - 3001:3001
+      - ${UPTIME_KUMA_UI_PORT}:3001
   glances:
     container_name: glances
     image: nicolargo/glances:latest
     pid: host
-    # network_mode: host
     environment:
       - TZ=${TZ}
       - GLANCES_OPT=-w
@@ -33,5 +32,5 @@ services:
       - /etc/os-release:/etc/os-release:ro
     restart: always
     ports:
-      - 61208:61208
-      - 61209:61209
+      - ${GLANCES_UI_PORT}:61208
+      - ${GLANCES_API_PORT}:61209

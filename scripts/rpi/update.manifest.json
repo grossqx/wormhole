@@ -76,6 +76,10 @@
             "source": "/rpi/docker_backups.sh",
             "path": "${WH_PATH}/utils/docker_backups.sh"
         },
+        "sync_backups": {
+            "source": "/rpi/sync_backups.sh",
+            "path": "${WH_PATH}/utils/sync_backups.sh"
+        },
         "initial_update": {
             "source": "/rpi/initial_update.sh",
             "path": "${WH_PATH}/installer/initial_update.sh"

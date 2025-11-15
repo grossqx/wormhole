@@ -1,15 +1,31 @@
 #!/bin/bash
 
 echo "Fetching environment variables from ${docker_dir}/environment.sh"
-source ${docker_dir}/environment.sh
+
+if [ -f "${docker_dir}/environment.sh" ]; then
+    source "${docker_dir}/environment.sh"
+else
+    echo "Warning: No environment file not found at ${docker_dir}/environment.sh"
+fi
+
 export docker_dir
+export docker_stacks
 export docker_configs
 export docker_volumes
 
-echo "Scanning for required variables per-stack in $STACKS_DIR"
+echo "Scanning for required variables per-stack in $docker_stacks"
+if [ ! -d "$docker_stacks" ]; then
+    echo "Error: Docker stacks directory '$docker_stacks' is absent."
+    exit 1
+fi
+
+STACK_LIST=$(ls "${docker_stacks}")
+if [ -z "$STACK_LIST" ]; then
+    echo "Warning: No stack directories found in ${docker_stacks}"
+fi
 
 MISSING_VARS_LOG=$(mktemp)
-find "$STACKS_DIR" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
+find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
     STACK_NAME=$(basename "$stack_dir")
     ENV_FILE="${stack_dir}/.env"
     echo "$STACK_NAME stack:"

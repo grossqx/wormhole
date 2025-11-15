@@ -91,8 +91,6 @@ for arg in "$@"; do
     esac
 done
 
-echo "Starting initial checks..."
-
 # Handle SSH check as a standalone action and exit
 if [ "$CHECK_SSH" = true ]; then
     if [ -z "$OTHER_SSH_HOST" ]; then
@@ -145,9 +143,9 @@ if [ "$REGISTER_IDENTITY" = true ] || [ "$GENERATE_SSH_GITHUB" = true ] || [ "$G
     fi
 fi
 
-echo "All initial checks completed successfully."
+echo "[0/3] Initial checks completed."
 
-echo "[1/4] Beginning installation phase..."
+echo "[1/3] Beginning installation..."
 
 if [ "$SKIP_GIT_INSTALL" = true ]; then
     echo "Skipping Git installation as requested."
@@ -158,8 +156,16 @@ if [ "$SKIP_GIT_INSTALL" = true ]; then
         exit 1
     fi
 else
-    echo "Installing git..."
-    $INSTALL_CMD git
+    message="Installing git"
+    packages_to_install="git"
+    if [ "$INSTALL_LFS" = true ]; then
+        message="${message} and git-lfs..."
+        packages_to_install="${packages_to_install} git-lfs"
+    else
+        message="${message} ..."
+    fi
+    echo $message
+    $INSTALL_CMD $packages_to_install
     if [ $? -eq 0 ]; then
         echo "Git installed successfully."
     else
@@ -168,18 +174,7 @@ else
     fi
 fi
 
-if [ "$INSTALL_LFS" = true ]; then
-    echo "[2/4] Installing git-lfs..."
-    $INSTALL_CMD git-lfs
-    if [ $? -eq 0 ]; then
-        echo "Git LFS installed successfully."
-    else
-        echo "Error: Failed to install Git LFS. Exiting."
-        exit 1
-    fi
-fi
-
-echo "[3/4] Beginning configuration phase..."
+echo "[2/3] Beginning configuration phase..."
 
 if [ "$REGISTER_IDENTITY" = true ]; then
     echo "Registering Git identity for user $TARGET_USER..."
@@ -329,7 +324,7 @@ if [ "$GENERATE_SSH_OTHER" = true ]; then
     fi
 fi
 
-echo "[4/4] Done"
+echo "[3/3] Done"
 
 if [ "$INSTALL_LFS" = false ] && [ "$REGISTER_IDENTITY" = false ] && [ "$GENERATE_SSH_GITHUB" = false ] && [ "$GENERATE_SSH_OTHER" = false ] && [ "$SKIP_GIT_INSTALL" = false ]; then
     echo "Script finished. Only Git has been installed."

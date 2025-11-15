@@ -63,7 +63,7 @@ function manage_stack() {
         sudo docker compose -f "$compose_file" config --"$action"
       fi
   elif echo "$commands_compose" | grep -w -q "$action"; then
-    echo "Running 'docker compose ${action}' for stack '${stack_name}'"
+    echo "[${current_stack}/${total_stacks}] Running 'docker compose ${action}' for stack '${stack_name}'"
     if [[ $action == "up" ]]; then
       sudo docker compose -f "$compose_file" "$action" -d
     else
@@ -77,14 +77,17 @@ function manage_stack() {
 }
 
 # Find all potential stack directories in docker_stacks
+current_stack=1
+total_stacks=$(find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | grep -zc .)
 find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read -r -d $'\0' stack_dir; do
     STACK_NAME=$(basename "$stack_dir")
-    if [[ $ACTION == "list" || $ACTION == "ls" ]]; then
+    if [[ $ACTION == "list" ]]; then
         echo "$STACK_NAME"
         continue
     fi
     # If specific stacks were requested, check if the current stack is one of them
     if [ ${#REQUESTED_STACKS[@]} -gt 0 ]; then
+        total_stacks=${#REQUESTED_STACKS[@]}
         IS_REQUESTED=false
         for req_stack in "${REQUESTED_STACKS[@]}"; do
             if [ "$STACK_NAME" == "$req_stack" ]; then
@@ -97,5 +100,6 @@ find "$docker_stacks" -maxdepth 1 -mindepth 1 -type d -print0 | while IFS= read 
         fi
     fi
     manage_stack "$STACK_NAME" "$ACTION"
+    current_stack=$((current_stack + 1))
 done
 exit 0
