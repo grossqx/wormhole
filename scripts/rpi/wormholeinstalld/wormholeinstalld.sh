@@ -588,6 +588,11 @@ case $install_stage in
         log_progress_state "Stage ${install_stage} / Finalizing installation"
         sdreport "Intallation finished. Performing final steps"
         echo "Intallation finished. Performing final steps" | log
+        echo "Applying autoupdate settings" | log
+        payload=$(jq --null-input --arg topic "get" '{topic: $topic}')
+        configuration_data=$(wh_send_payload "${payload}" "$configuration_endpoint")
+        wormhole auto-update self $(echo $configuration_data | jq -r '."autoupdate-self"') | log
+        wormhole auto-update system $(echo $configuration_data | jq -r '."autoupdate-system"') | log
         echo "Disabling ${installer_name} and removing checkpoint files" | log
         systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log
