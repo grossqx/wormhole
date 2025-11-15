@@ -9,11 +9,18 @@ services:
     container_name: unbound
     image: mvance/unbound-rpi:latest
     hostname: unbound
-    # volumes:
-      # - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
+    volumes:
+      - ${CONFIG_DIR}/unbound:/opt/unbound/etc/unbound
     networks:
       private_network:
         ipv4_address: ${UNBOUND_IP}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - unbound -V || exit 1
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
   pihole:
     container_name: pihole
