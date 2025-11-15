@@ -1,0 +1,12 @@
+services:
+  node-red:
+    container_name: node-red
+    image: nodered/node-red:latest
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${STORAGE_PATH}/node-red/data:/data
+      - ${STORAGE_PATH}/common:/common
+    restart: unless-stopped
+    ports:
+      - ${NODE_RED_PORT}:1880
