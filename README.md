@@ -9,7 +9,7 @@ Displays progress and a realtime log of the **wormhole** installer finalizing se
 
 ### Hardware: 
 
-Linux machine with a SD-card-reader. or SATA/NVMe reader. *Can also be the same computer as the server.*
+Linux machine with a SD-card-reader or SATA/NVMe reader. *Can also be the same computer as the server.*
 
 
 ## 2. Server
@@ -20,15 +20,14 @@ Powered by **Node-RED** and defined by a single *flow.json* file.
 - Defines and serves **node configurations** to the installer **clients**
 - Serves configuration updates to the live **nodes**
 - Monitors system state of existing Raspberry Pi **nodes**
-- Handles logging
 
 ## 3. Node
 
-**wormhole** - Management Utility bash script. Handles administrative functions and provides commands to manually manage docker stacks and environment, backups, updates, migration and configuration changes.
+**wormhole** - Management utility bash script. Handles administrative functions and provides commands to manually manage docker stacks and environment, backups, updates, migration and configuration changes.
 
-**wormholeinstalld.service** - Installs everything else and disables itself in the end. Logs the installation process to both client and server.
+**wormholeinstalld.service** - Installs everything else and disables itself in the end. Sends logs of the installation process to the server.
 
-**wormholed.service** - Main background daemon. Handles telemetry reporting to the server and manages routine checks on every reboot.
+**wormholed.service** - Main background daemon. Handles telemetry reporting to the server and routine checks on every reboot.
 
 ### Hardware: 
 
@@ -114,6 +113,18 @@ wormhole-installer --help
 2. If Rapsbery Pi was previously configured to boot from a different device type, physically disconnect those storage devices or change the boot order beforehand. They can be reconnected once the installer on the Pi passes the first stage.
 3. Wait
 
+# Backups
+
+To enable backups, add env variables to /etc/environment file on the Node:
+
+- To upload backups to the wormhole server over http(s), add line ```WH_REMOTE_BACKUP_DESTINATION=server```.
+
+-  To upload backups via ssh, add line ```WH_REMOTE_BACKUP_DESTINATION=<username>@<host>:<port>```.
+Edit username, port and host. Skip the port and ":" to use default ssh port 22. Manually generate a key and copy the identity to the destination host.
+
+- To set a custom backup directory, add line ```WH_REMOTE_BACKUP_DIR=<path>```.
+This directory should exist on the  ssh server. Defaults to  ```/home/wormhole/backups```
+
 # Uninstallation
 
 ### Client:
@@ -133,9 +144,16 @@ Disable or delete the Node-RED flow
 # Motivation
 Primary goal is simpifying the OS flashing and first setup for the user on the client side by offloading most of the decisions to the user on the server side. Client's installation script is designerd to be simple and interactive, provide detailed instructions and progress status. It also reports progress to the server to simplify support and troubleshooting.
 
+# TODOs:
+
+- send default wg peer to the server
+- ufw
+- add compression to wh-backup and restore
+
 # Issues:
 
 Feel free to open an issue if you found a bug or have an improvement suggestion.
+
 ## Known upsteam issues:
 [[BUG]: rpi-imager ignores settings in firstrun.sh when writing to nvme](https://github.com/raspberrypi/rpi-imager/issues/1165)
 
@@ -144,16 +162,22 @@ Feel free to open an issue if you found a bug or have an improvement suggestion.
 Server running on [Node-RED](https://github.com/node-red/node-red-docker).
 
 Docker-compose project for the node is based on [wirehole](https://github.com/IAmStoxe/wirehole) project. Main functionality provided by:
-- [WireGuard](https://www.wireguard.com/) (image [linuxserver/wireguard](https://docs.linuxserver.io/images/docker-wireguard/))
+- [WireGuard](https://www.wireguard.com/)
+(image [linuxserver/wireguard](https://docs.linuxserver.io/images/docker-wireguard/))
 - [Unbound](https://unbound.nlnetlabs.nl/)
+(image [mvance/unbound-rpi](https://hub.docker.com/r/mvance/unbound-rpi))
 - [Pi-hole](https://github.com/pi-hole/pi-hole)
+(image [pihole/pihole](https://hub.docker.com/r/pihole/pihole))
 
 Installer makes use of the official [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager).
 
 Migration powered by [rpi-clone](https://github.com/geerlingguy/rpi-clone).
 
+# License
 
-# Licenses for other components
+Unless otherwise specified, all code is released under the MIT License (MIT).
+
+## Licenses for other projects
 - Node-RED   [Apache 2.0](https://github.com/node-red/node-red/blob/master/LICENSE)
 - rpi-clone  [BSD 3-Clause](https://github.com/geerlingguy/rpi-clone/blob/master/LICENSE)
 - rpi-imager [LGPL v3](https://github.com/raspberrypi/rpi-imager/blob/main/license.txt)
