@@ -113,6 +113,44 @@ wormhole-installer --help
 2. If Rapsbery Pi was previously configured to boot from a different device type, physically disconnect those storage devices or change the boot order beforehand. They can be reconnected once the installer on the Pi passes the first stage.
 3. Wait
 
+# Configuration
+
+```
+users:
+  default:
+    generic:
+      hostname: generic
+      description: Example of a generic minimal configuration
+      device-tag: pi4-64bit
+      search: Pi OS
+  username:
+    empty: null
+    config-name:
+      hostname: wormholenode
+      description: Example of a full custom configuration
+      device-tag: pi4-64bit
+      search: Pi OS Lite
+      timezone: Europe/London
+      ip-addr: 192.168.0.11
+      domain: https://mydomain.com
+      wh-port: 40820
+      boot-device: USB
+      boot-device2: SDCARD
+      autoupdate-self: disabled
+      autoupdate-system: 0 3 * * 3
+      stacks-dir: /common/custom_docker_dir/
+      wifi:
+        ssid: WiFi SSID
+        password: changeme
+        encrypted: false
+        loc: GB
+      ssh:
+        port: 22
+        user: sshuser
+        encrypted: false
+        password: changeme
+```
+
 # Backups
 
 To enable backups, add env variables to /etc/environment file on the Node:
