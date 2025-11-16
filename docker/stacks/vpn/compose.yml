@@ -99,22 +99,3 @@ services:
     depends_on:
       - pihole
     restart: unless-stopped
-  wg-portal:
-    container_name: wg-portal
-    image: wgportal/wg-portal:v2.1.0
-    environment:
-      - TZ=${TZ}
-    volumes:
-      - ${STORAGE_PATH}/wireguard/wg_confs:/etc/wireguard
-      - ${STORAGE_PATH}/wg-portal/data:/app/data
-      - ${CONFIG_DIR}/wg-portal:/app/config
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
-    cap_add:
-      - NET_ADMIN
-    network_mode: service:wireguard
-    depends_on:
-      - wireguard
-    restart: unless-stopped
