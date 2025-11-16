@@ -115,10 +115,6 @@
         "git_clone_repo": {
             "source": "/rpi/git_clone_repo.sh",
             "path": "${WH_PATH}/installer/git_clone_repo.sh"
-        },
-        "mc_set_theme": {
-            "source": "/rpi/mc_set_theme.sh",
-            "path": "${WH_PATH}/installer/mc_set_theme.sh"
         }
     }
 }

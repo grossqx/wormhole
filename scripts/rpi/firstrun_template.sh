@@ -227,7 +227,6 @@ extract_file "git_install" 2>&1 | log
 extract_file "git_clone_repo" 2>&1 | log
 extract_file "set_boot_order" 2>&1 | log
 extract_file "migration" 2>&1 | log
-extract_file "mc_set_theme" 2>&1 | log
 ## ===============================================================================================================
 
 
