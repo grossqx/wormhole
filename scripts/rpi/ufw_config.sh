@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# Check if both ports are provided as arguments
 if [ -z "$1" ] || [ -z "$2" ]; then
     echo "Usage: $0 <SSH_PORT> <WIREGUARD_PORT>"
     echo "Example: $0 22 51820"
@@ -24,7 +23,6 @@ ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
 
-# Allow the specified ports with comments
 ufw allow $SSH_PORT/tcp comment 'Allow SSH for administration'
 ufw allow $WG_PORT/udp comment 'Allow WireGuard VPN connections'
 
