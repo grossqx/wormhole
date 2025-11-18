@@ -256,6 +256,14 @@ fi
 
 main_loop
 
+# Start docker stacks listed in docker.autostart
+if [[ -f "$WH_HOME/docker.autostart" ]]; then
+    wh_log "Starting docker stacks: $(cat $WH_HOME/docker.autostart)."
+    wormhole stack up $(cat $WH_HOME/docker.autostart)
+else
+    wh_log "No docker stacks are configured to autostart."
+fi
+
 # Run any existing migration order
 sudo $WH_PATH/wormhole.sh check-migration-plans
 

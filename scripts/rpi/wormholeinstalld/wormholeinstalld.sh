@@ -4,6 +4,8 @@ package_list_dependency="bc jq yq debconf-doc"
 
 package_list_additional="fail2ban needrestart nmap mc"
 
+autostart_stacks="vpn supervisor"
+
 repositories_to_clone=(
     "https://github.com/geerlingguy/rpi-clone.git"
 )
@@ -331,12 +333,15 @@ marker_close="___"
 
 # Other variables
 install_log_path="${WH_HOME}/wormhole_install.log"
+wireguard_peerconf_file="${WH_HOME}/peer_wormhole.conf"
 third_party_scripts_dir="${WH_PATH}/third_party"
 get_pollrate_endpoint="${WH_SERVER_API_URL}/wh/get_pollrate_rpi"
 install_log_endpoint="${WH_SERVER_API_URL}/wh/install_log_write"
 configuration_endpoint="${WH_SERVER_API_URL}/wh/rpi.configuration"
+peerconf_upload_url="${WH_SERVER_API_URL}/wh/wg_config_upload"
 checkpoint_boot="${WH_HOME}/.checkpoint-boot"
 checkpoint_stage="${WH_HOME}/.checkpoint-stage"
+docker_autostart_file="${WH_HOME}/docker.autostart"
 firstrun_log_path="/boot/firstrun.log"
 firstrun_backup="/home/firstrun_backup.sh"
 
@@ -573,7 +578,8 @@ case $install_stage in
             fi
         done
         log_progress_state "Stage ${install_stage} / UFW configuration"
-        ${WH_PATH}/installer/ufw_config.sh | while read -r line; do
+        SSH_PORT=$(awk '/^Port/ && !/^#/ {print $2; exit}' /etc/ssh/sshd_config)
+        ${WH_PATH}/installer/ufw_config.sh $SSH_PORT $WH_WIREGUARD_PORT | while read -r line; do
             parse_stage_progress "${line}" 0 11 10 11
             echo "$line" | log
         done
@@ -585,14 +591,51 @@ case $install_stage in
             echo $line | log
             parse_stage_progress "${line}" 0 1 0 1
         done
-        log_progress_state "Stage ${install_stage} / Finalizing installation"
-        sdreport "Intallation finished. Performing final steps"
-        echo "Intallation finished. Performing final steps" | log
+        
         echo "Applying autoupdate settings" | log
         payload=$(jq --null-input --arg topic "get" '{topic: $topic}')
         configuration_data=$(wh_send_payload "${payload}" "$configuration_endpoint")
         wormhole auto-update self $(echo $configuration_data | jq -r '."autoupdate-self"') | log
         wormhole auto-update system $(echo $configuration_data | jq -r '."autoupdate-system"') | log
+
+        log_progress_state "Stage ${install_stage} / Starting docker containers"
+        echo "Enabling autostart for docker stacks: ${autostart_stacks}" | log
+        touch ${docker_autostart_file}
+        echo ${autostart_stacks} > ${docker_autostart_file}
+        echo "Starting docker stacks: ${autostart_stacks}" | log
+        wormhole stack up ${autostart_stacks}
+        timeout 300 bash -c '
+            while ! docker logs wireguard 2>&1 | grep -q "All tunnels are now active";
+            do
+                echo "waiting for Wireguard..." | log
+                sleep 2
+            done
+        '
+        EXITCODE=$?
+        if [ $EXITCODE -eq 0 ]; then
+            echo "VPN tunnel is now open!" | log
+            docker exec wireguard cat /config/peer_wormhole/peer_wormhole.conf > ${wireguard_peerconf_file}
+            EXITCODE=$?
+            if [ $EXITCODE -eq 0 ]; then
+                curl -s -H "Authorization: Bearer $WH_HARDWARE_API_KEY" -X POST -F "file=@$wireguard_peerconf_file" "$peerconf_upload_url"
+                EXITCODE=$?
+                if [ $EXITCODE -eq 0 ]; then
+                    echo "Peer config uploaded to server" | log
+                else
+                    echo "Error: Failed to upload peer config - code ${EXITCODE}" | log
+                fi
+            else
+                echo "Error: Failed to retrieve peer config - code ${EXITCODE}" | log
+            fi
+        elif [ $EXITCODE -eq 124 ]; then
+            echo "Wireguard coinainer has failed. Timeout reached." | log
+        else
+            echo "Wireguard coinainer has failed - code ${EXITCODE}" | log
+        fi
+        
+        log_progress_state "Stage ${install_stage} / Finalizing installation"
+        sdreport "Intallation finished. Performing final steps"
+        echo "Intallation finished. Performing final steps" | log
         echo "Disabling ${installer_name} and removing checkpoint files" | log
         systemctl disable ${installer_name}.service | log
         rm -f "${checkpoint_boot}" | log

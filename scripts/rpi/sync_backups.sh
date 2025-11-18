@@ -96,7 +96,7 @@ case "$SYNC_MODE" in
             exit 1
         fi
         echo "Uploading archive to ${backup_http_url}..."
-        curl -s -X POST -F "file=@$TEMP_ARCHIVE" "$backup_http_url"
+        curl -s -H "Authorization: Bearer $WH_HARDWARE_API_KEY" -X POST -F "file=@$TEMP_ARCHIVE" "$backup_http_url"
         result=$?
         if [ ! ${result} -eq 0 ]; then
             echo "Error: curl HTTP upload failed - code ${result}. Cleaning up temporary archive..."
