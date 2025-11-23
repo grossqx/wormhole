@@ -82,7 +82,6 @@ services:
     volumes:
       - ${STORAGE_PATH}/wireguard/wg_confs:/config/wg_confs
     ports:
-      - ${WIREGUARD_UI_PORT}:${WIREGUARD_UI_PORT}
       - ${WIREGUARD_PORT}:51820/udp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
