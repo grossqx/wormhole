@@ -218,19 +218,17 @@ function expect_progress {
 # Function to display the help message.
 function show_help() {
     cat << EOF
-Usage: ${binary_name} <URL> <TOKEN> [options]
+Usage: ${binary_name} [options]
 
-A template script to demonstrate option and argument parsing.
-
-Arguments:
-  URL                 The API domain to use (e.g., api.domain.com).
-  TOKEN               The API key to be read from the environment.
+Manage the installation, updates, and configuration of ${app_name}.
 
 Options:
-  --lang=<language>   Specify a language code. "en" or "ua".
-  --search=<query>    Specify a search query in quotes (e.g., "OS Lite").
-  --device=<path>     Specify a device path (e.g., "/dev/mmcblk0").
-  --help              Display this help message and exit.
+  -v, --version         Display the script version.
+  -h, --help            Display this help message.
+  -u, update            Execute the update script.
+  -un, uninstall        Uninstall ${app_name}, cleaning up data and environments.
+  -m, media <path>      Specify the install media device path (e.g., /dev/mmcblk0).
+  -r, -nc, restart      Remove previous installation data/checkpoints to start over.
 EOF
 }
 
