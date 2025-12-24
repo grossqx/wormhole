@@ -100,12 +100,13 @@
             "615fb6bab9daa7e9",
             "631eec0619a85844",
             "0fffc2aa987fc6f2",
-            "acf22bc3b8677933"
+            "acf22bc3b8677933",
+            "2723327c8417c224"
         ],
         "x": 3392,
         "y": 53,
         "w": 3880,
-        "h": 1234
+        "h": 1274
     },
     {
         "id": "a690a8bf99478aec",
@@ -805,7 +806,8 @@
             "8894723dfb154499",
             "c98e76a0d083ea12",
             "4a4feda0b441be99",
-            "7b19ca4f2bdf34be"
+            "7b19ca4f2bdf34be",
+            "73d911ef7f6005ed"
         ],
         "x": 134,
         "y": 2599,
@@ -948,8 +950,8 @@
             "a228fad21d821990",
             "74695d59c0a464ac"
         ],
-        "x": 6614,
-        "y": 639,
+        "x": 6094,
+        "y": 659,
         "w": 612,
         "h": 162
     },
@@ -1040,6 +1042,48 @@
         "y": 1879,
         "w": 1392,
         "h": 142
+    },
+    {
+        "id": "2723327c8417c224",
+        "type": "group",
+        "z": "d833cbb1fb389561",
+        "g": "a2b11e533cc2dd7f",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "ea5b010712578f4c",
+            "8a9e72ac302f7b5f",
+            "4208ca491c6a860d",
+            "519a8cb8f851e338",
+            "e7f0e431a27066a2",
+            "a502556df5e2bafa",
+            "3fe688f0f40d8fda",
+            "6c2ba64eb9450583",
+            "e9ab544e29cc72de",
+            "6cdbe91365a261c2",
+            "f804b59df8175fe6",
+            "f037326efca1e745",
+            "76fd1b79a752bd1d",
+            "a0784023a44f092a",
+            "12be0e85a3687682",
+            "e15fd80db8988430",
+            "1b82b4afdc4d395f",
+            "f9551e6378037c3c",
+            "5561f79d0081040f",
+            "bab014f3e2167813",
+            "0d51db7024cba0eb"
+        ],
+        "x": 6094,
+        "y": 839,
+        "w": 1112,
+        "h": 462
     },
     {
         "id": "931949772228bb41",
@@ -2603,7 +2647,8 @@
         "wires": [
             [
                 "295e8becc5dd6358",
-                "4a4feda0b441be99"
+                "4a4feda0b441be99",
+                "73d911ef7f6005ed"
             ]
         ]
     },
@@ -8132,8 +8177,8 @@
         "once": true,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 6710,
-        "y": 720,
+        "x": 6190,
+        "y": 740,
         "wires": [
             [
                 "b215a470b2b56856",
@@ -8154,8 +8199,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 6950,
-        "y": 680,
+        "x": 6430,
+        "y": 700,
         "wires": [
             [
                 "a228fad21d821990"
@@ -8175,8 +8220,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "",
-        "x": 7150,
-        "y": 720,
+        "x": 6630,
+        "y": 740,
         "wires": [
             [],
             [],
@@ -8196,8 +8241,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 6950,
-        "y": 760,
+        "x": 6430,
+        "y": 780,
         "wires": [
             [
                 "a228fad21d821990"
@@ -9494,5 +9539,527 @@
                 "ad82a8f5c04c3dd7"
             ]
         ]
+    },
+    {
+        "id": "ea5b010712578f4c",
+        "type": "exec",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 6370,
+        "y": 960,
+        "wires": [
+            [
+                "4208ca491c6a860d"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "8a9e72ac302f7b5f",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "get script_version",
+        "func": "msg.payload = \"source \" + env.get(\"SCRIPTS_PATH\") + \"/res/settings.sh && echo $script_version\"\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6210,
+        "y": 960,
+        "wires": [
+            [
+                "ea5b010712578f4c"
+            ]
+        ]
+    },
+    {
+        "id": "4208ca491c6a860d",
+        "type": "switch",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "success",
+        "property": "rc.code",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 6520,
+        "y": 960,
+        "wires": [
+            [
+                "a502556df5e2bafa"
+            ],
+            [
+                "e7f0e431a27066a2"
+            ]
+        ]
+    },
+    {
+        "id": "519a8cb8f851e338",
+        "type": "debug",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "Can't find scripts/res/settings.sh",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 7000,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "e7f0e431a27066a2",
+        "type": "change",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Can't find scripts/res/settings.sh",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 6740,
+        "y": 900,
+        "wires": [
+            [
+                "519a8cb8f851e338"
+            ]
+        ]
+    },
+    {
+        "id": "a502556df5e2bafa",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "set version",
+        "func": "flow.set(\"VERSION\", msg.payload.trim());\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6730,
+        "y": 960,
+        "wires": [
+            [
+                "6c2ba64eb9450583"
+            ]
+        ]
+    },
+    {
+        "id": "3fe688f0f40d8fda",
+        "type": "exec",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 6370,
+        "y": 1040,
+        "wires": [
+            [
+                "e9ab544e29cc72de"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "6c2ba64eb9450583",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "get key_derivation",
+        "func": "msg.payload = \"source \" + env.get(\"SCRIPTS_PATH\") + \"/res/settings.sh && echo $key_derivation\"\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6210,
+        "y": 1040,
+        "wires": [
+            [
+                "3fe688f0f40d8fda"
+            ]
+        ]
+    },
+    {
+        "id": "e9ab544e29cc72de",
+        "type": "switch",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "success",
+        "property": "rc.code",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 6520,
+        "y": 1040,
+        "wires": [
+            [
+                "6cdbe91365a261c2"
+            ],
+            [
+                "e7f0e431a27066a2"
+            ]
+        ]
+    },
+    {
+        "id": "6cdbe91365a261c2",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "set key_derivation",
+        "func": "flow.set(\"KEY_DERIVATION\", msg.payload.trim());\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6750,
+        "y": 1040,
+        "wires": [
+            [
+                "f037326efca1e745"
+            ]
+        ]
+    },
+    {
+        "id": "f804b59df8175fe6",
+        "type": "exec",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 6370,
+        "y": 1120,
+        "wires": [
+            [
+                "76fd1b79a752bd1d"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "f037326efca1e745",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "get crypto_cipher",
+        "func": "msg.payload = \"source \" + env.get(\"SCRIPTS_PATH\") + \"/res/settings.sh && echo $crypto_cipher\"\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6210,
+        "y": 1120,
+        "wires": [
+            [
+                "f804b59df8175fe6"
+            ]
+        ]
+    },
+    {
+        "id": "76fd1b79a752bd1d",
+        "type": "switch",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "success",
+        "property": "rc.code",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 6520,
+        "y": 1120,
+        "wires": [
+            [
+                "a0784023a44f092a"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a0784023a44f092a",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "set crypto_cipher",
+        "func": "flow.set(\"CRYPTO_CIPHER\", msg.payload.trim());\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6750,
+        "y": 1120,
+        "wires": [
+            [
+                "e15fd80db8988430"
+            ]
+        ]
+    },
+    {
+        "id": "12be0e85a3687682",
+        "type": "exec",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 6370,
+        "y": 1200,
+        "wires": [
+            [
+                "1b82b4afdc4d395f"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "e15fd80db8988430",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "get crypto_key",
+        "func": "msg.payload = \"source \" + env.get(\"SCRIPTS_PATH\") + \"/res/settings.sh && echo $crypto_key\"\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6220,
+        "y": 1200,
+        "wires": [
+            [
+                "12be0e85a3687682"
+            ]
+        ]
+    },
+    {
+        "id": "1b82b4afdc4d395f",
+        "type": "switch",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "success",
+        "property": "rc.code",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 6520,
+        "y": 1200,
+        "wires": [
+            [
+                "f9551e6378037c3c"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "f9551e6378037c3c",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "set crypto_key",
+        "func": "flow.set(\"CRYPTO_KEY\", msg.payload.trim());\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 6740,
+        "y": 1200,
+        "wires": [
+            [
+                "bab014f3e2167813"
+            ]
+        ]
+    },
+    {
+        "id": "5561f79d0081040f",
+        "type": "debug",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "Settings retrieved from settings.sh",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 7010,
+        "y": 1260,
+        "wires": []
+    },
+    {
+        "id": "bab014f3e2167813",
+        "type": "change",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Settings retrieved from settings.sh",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 6740,
+        "y": 1260,
+        "wires": [
+            [
+                "5561f79d0081040f"
+            ]
+        ]
+    },
+    {
+        "id": "0d51db7024cba0eb",
+        "type": "inject",
+        "z": "d833cbb1fb389561",
+        "g": "2723327c8417c224",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.15",
+        "topic": "",
+        "x": 6190,
+        "y": 880,
+        "wires": [
+            [
+                "8a9e72ac302f7b5f"
+            ]
+        ]
+    },
+    {
+        "id": "73d911ef7f6005ed",
+        "type": "debug",
+        "z": "d833cbb1fb389561",
+        "g": "1fa579e57119388b",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 2660,
+        "wires": []
     }
 ]
