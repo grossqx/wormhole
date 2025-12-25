@@ -890,6 +890,7 @@ ${base_dir}/utils/print_config.sh "${configuration_file}"
 ## ============================================================
 CHECKPOINT=$(get_checkpoint)
 if (( CHECKPOINT < 9)); then
+    source ${configuration_file}
     send_report "Starting the write image sequence"
     echo -e "${T_BLUE}Image settings complete${T_NC}"
     echo "All partitions from device ${INSTALL_DEVICE} have to be unmounted before writing the image"
@@ -908,6 +909,12 @@ if (( CHECKPOINT < 9)); then
     ${base_dir}/utils/imager.sh "$INSTALL_DEVICE" "${RPI_CONFIG_TAG}" "${RPI_CONFIG_SEARCH}" "${firstrun_file}"
     result=$?
     if [[ $result -eq 0 ]]; then
+        ${base_dir}/utils/validate_firstrun.sh "$INSTALL_DEVICE" "${firstrun_file}" "${RPI_WIFI_LOC}"
+        if [[ $result -eq 0 ]]; then
+            echo -e "${T_GREEN}fistrun.sh and cmdline.txt validated on the bootfs partition${T_NC}"
+        else
+            echo -e "${T_RED}Error: Failed to validate firstrun.sh or cmdline.txt on bootfs partition${T_NC}"
+        fi
         IMAGE_WRITTEN=true
         set_checkpoint 9
         send_report "Image successfully written to client's media. Instructed the client to power on the device."
