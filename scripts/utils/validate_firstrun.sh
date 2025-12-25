@@ -6,8 +6,8 @@ TARGET_DEVICE=$1
 FIRSTRUN_SCRIPT=$2
 WIFI_REGION=$3
 
-if [[ -z "$TARGET_DEVICE" || -z "$FIRSTRUN_SCRIPT" || -z "$WIFI_REGION" ]]; then
-    echo "Usage: $0 <target_device> <firstrun_script_path> <wifi_region>"
+if [[ -z "$TARGET_DEVICE" || -z "$FIRSTRUN_SCRIPT" ]]; then
+    echo "Usage: $0 <target_device> <firstrun_script_path> [wifi_region]"
     exit 1
 fi
 
@@ -21,7 +21,7 @@ fi
 EXISTING_MOUNT=$(lsblk -no MOUNTPOINT "$BOOT_PART" | grep -v "^$" || true)
 if [[ -n "$EXISTING_MOUNT" ]]; then
     echo "Partition $BOOT_PART is currently mounted at $EXISTING_MOUNT. Unmounting..."
-    sudo umount "$BOOT_PART" || { echo "Error: Failed to unmount existing partition. Is it in use?"; exit 1; }
+    sudo umount -l "$BOOT_PART" || { echo "Error: Failed to unmount existing partition."; exit 1; }
 fi
 
 MOUNT_POINT=$(mktemp -d)
@@ -30,7 +30,7 @@ cleanup() {
     if mountpoint -q "$MOUNT_POINT"; then
         echo "Finalizing and unmounting $BOOT_PART..."
         sync
-        sudo umount "$MOUNT_POINT"
+        sudo umount -l "$MOUNT_POINT"
     fi
     if [ -d "$MOUNT_POINT" ]; then
         rmdir "$MOUNT_POINT"
@@ -65,12 +65,16 @@ fi
 CURRENT_CMDLINE=$(cat "$CMDLINE_FILE")
 
 SYSTEMD_PARAMS="systemd.run=/boot/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target"
-REGDOM_PARAM="cfg80211.ieee80211_regdom=${WIFI_REGION}"
 
-if [[ $CURRENT_CMDLINE == *"cfg80211.ieee80211_regdom="* ]]; then
-    CURRENT_CMDLINE=$(echo "$CURRENT_CMDLINE" | sed "s/cfg80211\.ieee80211_regdom=[^ ]*/$REGDOM_PARAM/")
+if [[ -n "$WIFI_REGION" ]]; then
+    REGDOM_PARAM="cfg80211.ieee80211_regdom=${WIFI_REGION}"
+    if [[ $CURRENT_CMDLINE == *"cfg80211.ieee80211_regdom="* ]]; then
+        CURRENT_CMDLINE=$(echo "$CURRENT_CMDLINE" | sed "s/cfg80211\.ieee80211_regdom=[^ ]*/$REGDOM_PARAM/")
+    else
+        CURRENT_CMDLINE="$CURRENT_CMDLINE $REGDOM_PARAM"
+    fi
 else
-    CURRENT_CMDLINE="$CURRENT_CMDLINE $REGDOM_PARAM"
+    echo "No WiFi region provided. Skipping cfg80211 configuration."
 fi
 
 for param in $SYSTEMD_PARAMS; do
@@ -84,9 +88,11 @@ echo "$CURRENT_CMDLINE" | tr -s ' ' | sudo tee "$CMDLINE_FILE" > /dev/null
 echo "Verifying changes in cmdline.txt..."
 VERIFY_CMDLINE=$(cat "$CMDLINE_FILE")
 
-if [[ "$VERIFY_CMDLINE" != *"$REGDOM_PARAM"* ]]; then
-    echo "Verification FAILED: WiFi region parameter not found or incorrect."
-    exit 1
+if [[ -n "$WIFI_REGION" ]]; then
+    if [[ "$VERIFY_CMDLINE" != *"$REGDOM_PARAM"* ]]; then
+        echo "Verification FAILED: WiFi region parameter not found or incorrect."
+        exit 1
+    fi
 fi
 
 for param in $SYSTEMD_PARAMS; do

@@ -91,7 +91,7 @@ echo -e "${T_ITALIC}Note: Many of these are standard command-line tools and may 
 for RPI_DEP in $RPI_DEPENDENCIES; do
     case "$RPI_DEP" in
         "rpi-imager")
-            echo -e "  ${T_BBLUE}rpi-imager${T_NC}: ${T_ITALIC}Official tool for writing OS images to SD cards.${T_NC}"
+            echo -e "  ${T_BBLUE}rpi-imager${T_NC}: ${T_ITALIC}Official Raspberry Pi tool for writing OS images to SD cards.${T_NC}"
             ;;
         "bc")
             echo -e "  ${T_BBLUE}bc${T_NC}: ${T_ITALIC}GNU bc calculator for performing arbitrary-precision arithmetic calculations.${T_NC}"

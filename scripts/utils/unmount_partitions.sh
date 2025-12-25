@@ -20,7 +20,7 @@ fi
 # Loop through each mount point and unmount it.
 while read -r mount_point; do
   echo "Unmounting $mount_point..."
-  sudo umount "$mount_point"
+  sudo umount -l "$mount_point"
   if [ $? -eq 0 ]; then
     echo "Successfully unmounted $mount_point"
   else
