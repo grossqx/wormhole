@@ -52,16 +52,6 @@
                 "type": "str"
             },
             {
-                "name": "CIPHER",
-                "value": "-aes-256-cbc",
-                "type": "str"
-            },
-            {
-                "name": "KEY_DERIVATION",
-                "value": "-pbkdf2",
-                "type": "str"
-            },
-            {
                 "name": "CRYPTO_KEY",
                 "value": "seed",
                 "type": "str"
@@ -298,7 +288,7 @@
         "x": 108,
         "y": 3559,
         "w": 3204,
-        "h": 868
+        "h": 1008
     },
     {
         "id": "f79da15299c44e67",
@@ -475,7 +465,7 @@
             "aa59e3c434587182"
         ],
         "x": 134,
-        "y": 3899,
+        "y": 4039,
         "w": 2352,
         "h": 282
     },
@@ -522,7 +512,7 @@
             "b727c8af0418fe7e"
         ],
         "x": 134,
-        "y": 4199,
+        "y": 4339,
         "w": 3152,
         "h": 202
     },
@@ -895,12 +885,18 @@
             "3513276384867acb",
             "36e3ce8a1cada8df",
             "84c35db7935f5bd2",
-            "b3bf4d2f6e247252"
+            "b3bf4d2f6e247252",
+            "e778aa308b663efa",
+            "59eb0f3c2e5df1c6",
+            "292ef4e83196586b",
+            "f8c54c733bd5f3ae",
+            "2028903ada9a696a",
+            "6a84f3d4ff7811e4"
         ],
         "x": 134,
         "y": 3639,
         "w": 1092,
-        "h": 202
+        "h": 362
     },
     {
         "id": "7da362d67a6153a1",
@@ -1304,7 +1300,7 @@
         "z": "d833cbb1fb389561",
         "g": "0719be1167dcab09",
         "x": 1880,
-        "y": 4000,
+        "y": 4140,
         "wires": [
             [
                 "a54f5bd0b92f77aa",
@@ -1331,7 +1327,7 @@
         "z": "d833cbb1fb389561",
         "g": "a450ee77511a9278",
         "x": 2880,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "eb33aef713845093",
@@ -2396,7 +2392,7 @@
         "z": "d833cbb1fb389561",
         "g": "fd62441eb4cd73fb",
         "name": "set encryption parameters",
-        "func": "const outputMsgs = [];\nconst cipher = env.get(\"CIPHER\");\nconst key_derivation = env.get(\"KEY_DERIVATION\");\nconst crypto_key = env.get(\"CRYPTO_KEY\");\n\nfor (const userKey in msg.payload.users) {\n    const user = msg.payload.users[userKey];\n    for (const config_id in user) {\n        const config = user[config_id];\n        if (config && typeof config === 'object') {\n            if (config.wifi) {\n                if (config.wifi.encrypted == false){\n                    const password = config.wifi.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.wifi`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n            if (config.ssh) {\n                if (config.ssh.encrypted == false){\n                    const password = config.ssh.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.ssh`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n        }\n    }\n}\n\nreturn [outputMsgs];",
+        "func": "const outputMsgs = [];\nconst cipher = flow.get(\"CRYPTO_CIPHER\");\nconst key_derivation = flow.get(\"KEY_DERIVATION\");\nconst crypto_key = env.get(\"CRYPTO_KEY\");\n\nfor (const userKey in msg.payload.users) {\n    const user = msg.payload.users[userKey];\n    for (const config_id in user) {\n        const config = user[config_id];\n        if (config && typeof config === 'object') {\n            if (config.wifi) {\n                if (config.wifi.encrypted == false){\n                    const password = config.wifi.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.wifi`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n            if (config.ssh) {\n                if (config.ssh.encrypted == false){\n                    const password = config.ssh.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.ssh`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n        }\n    }\n}\n\nreturn [outputMsgs];",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3415,7 +3411,7 @@
         "z": "d833cbb1fb389561",
         "g": "89b44b76c3f4b136",
         "name": "set decrypt parameters",
-        "func": "const cipher = env.get(\"CIPHER\");\nconst key_derivation = env.get(\"KEY_DERIVATION\");\nconst crypto_key = env.get(\"CRYPTO_KEY\");\n\n//msg.command = \"echo '\" + msg.payload + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -base64 -d -salt -pass pass:'seed'\";\nmsg.command = \"echo '\" + msg.payload + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -base64 -d -salt -pass pass:'\" + crypto_key + \"'\";\n\nreturn msg;",
+        "func": "const cipher = flow.get(\"CRYPTO_CIPHER\");\nconst key_derivation = flow.get(\"KEY_DERIVATION\");\nconst crypto_key = env.get(\"CRYPTO_KEY\");\n\nmsg.command = \"echo '\" + msg.payload + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -base64 -d -salt -pass pass:'\" + crypto_key + \"'\";\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4631,7 +4627,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 270,
-        "y": 4020,
+        "y": 4160,
         "wires": [
             [
                 "ed2e6162ecdf50bb",
@@ -4653,7 +4649,7 @@
         "finalize": "",
         "libs": [],
         "x": 1530,
-        "y": 4140,
+        "y": 4280,
         "wires": [
             [
                 "044c33de463cdfd5"
@@ -4672,7 +4668,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 2200,
-        "y": 4140,
+        "y": 4280,
         "wires": [
             [
                 "4d423e51404c5ce7"
@@ -4694,7 +4690,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2380,
-        "y": 4140,
+        "y": 4280,
         "wires": []
     },
     {
@@ -4717,7 +4713,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1070,
-        "y": 4020,
+        "y": 4160,
         "wires": [
             [
                 "77bfb086cc3a0767",
@@ -4739,7 +4735,7 @@
             "f9b03f4ad3dcce84"
         ],
         "x": 1215,
-        "y": 4080,
+        "y": 4220,
         "wires": []
     },
     {
@@ -4751,7 +4747,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 2280,
-        "y": 3980,
+        "y": 4120,
         "wires": []
     },
     {
@@ -4768,7 +4764,7 @@
         "finalize": "",
         "libs": [],
         "x": 1300,
-        "y": 4020,
+        "y": 4160,
         "wires": [
             [
                 "8811e4c2212cd6de",
@@ -4848,7 +4844,7 @@
         "repair": false,
         "outputs": 2,
         "x": 2030,
-        "y": 3980,
+        "y": 4120,
         "wires": [
             [
                 "053f0a64585f0934",
@@ -4868,7 +4864,7 @@
         "statusCode": "201",
         "headers": {},
         "x": 2280,
-        "y": 4020,
+        "y": 4160,
         "wires": []
     },
     {
@@ -4886,7 +4882,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2030,
-        "y": 4040,
+        "y": 4180,
         "wires": []
     },
     {
@@ -4903,7 +4899,7 @@
         "finalize": "",
         "libs": [],
         "x": 1770,
-        "y": 4140,
+        "y": 4280,
         "wires": [
             [
                 "37369d41c7af3b58"
@@ -4970,7 +4966,7 @@
         "to": "",
         "reg": false,
         "x": 1740,
-        "y": 4000,
+        "y": 4140,
         "wires": [
             [
                 "342a6c0141332d51"
@@ -5069,7 +5065,7 @@
         "finalize": "",
         "libs": [],
         "x": 890,
-        "y": 4020,
+        "y": 4160,
         "wires": [
             [
                 "fe530fd495e81920"
@@ -5088,7 +5084,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 270,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "c2ade3e85dc8b69a",
@@ -5116,7 +5112,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1070,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "92770559c471d5b6",
@@ -5138,7 +5134,7 @@
             "f9b03f4ad3dcce84"
         ],
         "x": 1215,
-        "y": 4340,
+        "y": 4480,
         "wires": []
     },
     {
@@ -5150,7 +5146,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 3200,
-        "y": 4240,
+        "y": 4380,
         "wires": []
     },
     {
@@ -5167,7 +5163,7 @@
         "finalize": "",
         "libs": [],
         "x": 1300,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "2282c41fa9caeefe"
@@ -5194,7 +5190,7 @@
         "repair": false,
         "outputs": 2,
         "x": 2990,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "04670c740af696de"
@@ -5213,7 +5209,7 @@
         "statusCode": "201",
         "headers": {},
         "x": 3200,
-        "y": 4300,
+        "y": 4440,
         "wires": []
     },
     {
@@ -5231,7 +5227,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2990,
-        "y": 4300,
+        "y": 4440,
         "wires": []
     },
     {
@@ -5273,7 +5269,7 @@
         "to": "",
         "reg": false,
         "x": 2760,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "da7db72d1bffe3b3"
@@ -5294,7 +5290,7 @@
         "finalize": "",
         "libs": [],
         "x": 890,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "606aaad183b26615"
@@ -5315,7 +5311,7 @@
         "finalize": "",
         "libs": [],
         "x": 1510,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "399fc36dd99ae697"
@@ -5336,7 +5332,7 @@
         "oldrc": false,
         "name": "",
         "x": 1850,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "1bd87310dc3e90b8"
@@ -5364,7 +5360,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2150,
-        "y": 4360,
+        "y": 4500,
         "wires": []
     },
     {
@@ -5389,7 +5385,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1990,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "d6241981f70622b9"
@@ -5420,7 +5416,7 @@
         "to": "",
         "reg": false,
         "x": 2140,
-        "y": 4300,
+        "y": 4440,
         "wires": [
             [
                 "683fbdd2d8ef9e62"
@@ -5448,7 +5444,7 @@
         "to": "",
         "reg": false,
         "x": 1690,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "d1254dbd048faa0c"
@@ -5467,7 +5463,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 2320,
-        "y": 4300,
+        "y": 4440,
         "wires": [
             [
                 "5321f9101cad2b07"
@@ -5489,7 +5485,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2500,
-        "y": 4300,
+        "y": 4440,
         "wires": []
     },
     {
@@ -5513,7 +5509,7 @@
         "to": "",
         "reg": false,
         "x": 2330,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "25050e739cd2aa6f"
@@ -5541,7 +5537,7 @@
         "to": "",
         "reg": false,
         "x": 2540,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "676da4dad1aafec8"
@@ -5562,7 +5558,7 @@
         "finalize": "",
         "libs": [],
         "x": 2130,
-        "y": 4240,
+        "y": 4380,
         "wires": [
             [
                 "6706c3dec83a4825"
@@ -6786,7 +6782,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 530,
-        "y": 4080,
+        "y": 4220,
         "wires": [
             []
         ]
@@ -6803,7 +6799,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 530,
-        "y": 4340,
+        "y": 4480,
         "wires": [
             []
         ]
@@ -6915,7 +6911,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1310,
-        "y": 4240,
+        "y": 4380,
         "wires": []
     },
     {
@@ -6933,7 +6929,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1310,
-        "y": 3960,
+        "y": 4100,
         "wires": []
     },
     {
@@ -6951,7 +6947,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2280,
-        "y": 3940,
+        "y": 4080,
         "wires": []
     },
     {
@@ -7004,8 +7000,8 @@
         ],
         "linkType": "static",
         "timeout": "30",
-        "x": 550,
-        "y": 3800,
+        "x": 530,
+        "y": 3960,
         "wires": [
             []
         ]
@@ -7106,7 +7102,7 @@
         "allowrate": true,
         "outputs": 1,
         "x": 690,
-        "y": 4020,
+        "y": 4160,
         "wires": [
             [
                 "64265e641987b56e"
@@ -7132,7 +7128,7 @@
         "allowrate": true,
         "outputs": 1,
         "x": 690,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "353de0c67305eebc"
@@ -7160,7 +7156,7 @@
         "to": "",
         "reg": false,
         "x": 520,
-        "y": 4280,
+        "y": 4420,
         "wires": [
             [
                 "1b250227e9637242"
@@ -7188,7 +7184,7 @@
         "to": "",
         "reg": false,
         "x": 520,
-        "y": 4020,
+        "y": 4160,
         "wires": [
             [
                 "fb08b0419555d43f"
@@ -7264,7 +7260,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1990,
-        "y": 4140,
+        "y": 4280,
         "wires": [
             [
                 "511a3388efc3752e"
@@ -7290,7 +7286,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2200,
-        "y": 4080,
+        "y": 4220,
         "wires": []
     },
     {
@@ -7557,7 +7553,7 @@
         "z": "d833cbb1fb389561",
         "g": "7da362d67a6153a1",
         "name": "add encryption",
-        "func": "msg.filepath_enc=msg.filepath+\".enc\";\nmsg.payload = \"openssl enc -in \" + msg.filepath + \" \" + env.get(\"CIPHER\") + \" \" + env.get(\"KEY_DERIVATION\") + \" -salt -out \" + msg.filepath_enc + \" -k \" + env.get(\"CRYPTO_KEY\")\n\nreturn msg;",
+        "func": "msg.filepath_enc=msg.filepath+\".enc\";\nmsg.payload = \"openssl enc -in \" + msg.filepath + \" \" + flow.get(\"CRYPTO_CIPHER\") + \" \" + flow.get(\"KEY_DERIVATION\") + \" -salt -out \" + msg.filepath_enc + \" -k \" + env.get(\"CRYPTO_KEY\")\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7751,7 +7747,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1570,
+        "x": 1550,
         "y": 1000,
         "wires": [
             [
@@ -10061,5 +10057,132 @@
         "x": 450,
         "y": 2660,
         "wires": []
+    },
+    {
+        "id": "e778aa308b663efa",
+        "type": "http in",
+        "z": "d833cbb1fb389561",
+        "g": "c7bf8394ca306179",
+        "name": "",
+        "url": "/wh/encryption_parms",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 270,
+        "y": 3820,
+        "wires": [
+            [
+                "59eb0f3c2e5df1c6"
+            ]
+        ]
+    },
+    {
+        "id": "59eb0f3c2e5df1c6",
+        "type": "link call",
+        "z": "d833cbb1fb389561",
+        "g": "c7bf8394ca306179",
+        "name": "",
+        "links": [
+            "630bc9a5a168b928"
+        ],
+        "linkType": "static",
+        "timeout": "30",
+        "x": 530,
+        "y": 3820,
+        "wires": [
+            [
+                "292ef4e83196586b"
+            ]
+        ]
+    },
+    {
+        "id": "292ef4e83196586b",
+        "type": "switch",
+        "z": "d833cbb1fb389561",
+        "g": "c7bf8394ca306179",
+        "name": "auth success",
+        "property": "auth_success",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 730,
+        "y": 3820,
+        "wires": [
+            [
+                "f8c54c733bd5f3ae"
+            ],
+            [
+                "95e9276d0cd029f0"
+            ]
+        ]
+    },
+    {
+        "id": "f8c54c733bd5f3ae",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "c7bf8394ca306179",
+        "name": "set payload",
+        "func": "msg.payload = flow.get(\"KEY_DERIVATION\") + \" \" + flow.get(\"CRYPTO_CIPHER\") + \" \" + flow.get(\"VERSION\");\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 3820,
+        "wires": [
+            [
+                "966ff851cbd90656"
+            ]
+        ]
+    },
+    {
+        "id": "2028903ada9a696a",
+        "type": "http in",
+        "z": "d833cbb1fb389561",
+        "g": "c7bf8394ca306179",
+        "name": "",
+        "url": "/wh/encryption_parms_rpi",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 290,
+        "y": 3900,
+        "wires": [
+            [
+                "6a84f3d4ff7811e4"
+            ]
+        ]
+    },
+    {
+        "id": "6a84f3d4ff7811e4",
+        "type": "link call",
+        "z": "d833cbb1fb389561",
+        "g": "c7bf8394ca306179",
+        "name": "",
+        "links": [
+            "2eca9639c066f299"
+        ],
+        "linkType": "static",
+        "timeout": "30",
+        "x": 540,
+        "y": 3900,
+        "wires": [
+            [
+                "292ef4e83196586b"
+            ]
+        ]
     }
 ]

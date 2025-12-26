@@ -1,7 +1,7 @@
 #!/bin/bash
 
 binary_name="wormhole"
-version="placeholder version"
+version="___SCRIPT_VERSION___"
 
 command="$1"
 
@@ -15,13 +15,9 @@ done
 base_dir="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 function show_help(){
-    echo "Wormhole ${version}"
+    echo "Wormhole Management Utility ${version} - A script for maintenance, migration, and Docker stack handling."
     echo
     echo "Usage: ${binary_name} <command> [arguments]"
-    echo
-    echo "Wormhole Management Utility - A script for maintenance, migration, and Docker stack handling."
-    echo
-    echo "Primary Commands:"
     echo "  -h, --help                 Show this help message."
     echo "  -v, --version              Show version information."
     echo
@@ -50,7 +46,6 @@ function show_help(){
     echo "      -b, backup [stack]     Stop, backup data volumes, and restart a specific stack."
     echo "      -r, restore [stack]    Stop, restore data volumes, and restart a specific stack (volume replacement)."
     echo "      -fr, full-restore [stack] Down, recreate, restore volumes, and start a specific stack (full rebuild)."
-    echo
 }
 
 function run_migration_order(){

@@ -998,7 +998,7 @@ if (( CHECKPOINT < 10)); then
             send_report "IP address does not match the one in the configuration"
             while true; do
                 echo -e "${T_BLUE}How do you with to proceed?${T_NC}"
-                echo "  1. Update the configuration to match the current IP assigned by router's DHCP - '${online_ip}'"
+                echo "  1. Update the configuration to match the current IP assigned by router's DHCP - '${online_ip}' (requires ssh login)"
                 echo "  2. Keep the configuration's IP address and reconfigure the router later"
                 read -p "Choose an option: " option
                 # Based on user option, proceed with IP configuration
