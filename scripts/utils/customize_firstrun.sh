@@ -61,5 +61,5 @@ manifest="${base_dir}/rpi/update.manifest.json"
 for file_id in $(jq -r '.files | keys | .[]' "$manifest"); do
     source=$(jq -r ".files.\"$file_id\".source" "$manifest")
     path=$(jq -r ".files.\"$file_id\".path" "$manifest")
-    embed_file ".$source" "$OUTPUT_FILE" "$file_id" "$path"
+    embed_file "${base_dir}/$source" "$OUTPUT_FILE" "$file_id" "$path"
 done
