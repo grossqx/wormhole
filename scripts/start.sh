@@ -218,19 +218,17 @@ function expect_progress {
 # Function to display the help message.
 function show_help() {
     cat << EOF
-Usage: ${binary_name} <URL> <TOKEN> [options]
+Usage: ${binary_name} [options]
 
-A template script to demonstrate option and argument parsing.
-
-Arguments:
-  URL                 The API domain to use (e.g., api.domain.com).
-  TOKEN               The API key to be read from the environment.
+Manage the installation, updates, and configuration of ${app_name}.
 
 Options:
-  --lang=<language>   Specify a language code. "en" or "ua".
-  --search=<query>    Specify a search query in quotes (e.g., "OS Lite").
-  --device=<path>     Specify a device path (e.g., "/dev/mmcblk0").
-  --help              Display this help message and exit.
+  -v, --version         Display the script version.
+  -h, --help            Display this help message.
+  -u, update            Execute the update script.
+  -un, uninstall        Uninstall ${app_name}, cleaning up data and environments.
+  -m, media <path>      Specify the install media device path (e.g., /dev/mmcblk0).
+  -r, -nc, restart      Remove previous installation data/checkpoints to start over.
 EOF
 }
 
@@ -892,6 +890,7 @@ ${base_dir}/utils/print_config.sh "${configuration_file}"
 ## ============================================================
 CHECKPOINT=$(get_checkpoint)
 if (( CHECKPOINT < 9)); then
+    source ${configuration_file}
     send_report "Starting the write image sequence"
     echo -e "${T_BLUE}Image settings complete${T_NC}"
     echo "All partitions from device ${INSTALL_DEVICE} have to be unmounted before writing the image"
@@ -910,6 +909,12 @@ if (( CHECKPOINT < 9)); then
     ${base_dir}/utils/imager.sh "$INSTALL_DEVICE" "${RPI_CONFIG_TAG}" "${RPI_CONFIG_SEARCH}" "${firstrun_file}"
     result=$?
     if [[ $result -eq 0 ]]; then
+        ${base_dir}/utils/validate_firstrun.sh "$INSTALL_DEVICE" "${firstrun_file}" "${RPI_WIFI_LOC}"
+        if [[ $result -eq 0 ]]; then
+            echo -e "${T_GREEN}fistrun.sh and cmdline.txt validated on the bootfs partition${T_NC}"
+        else
+            echo -e "${T_RED}Error: Failed to validate firstrun.sh or cmdline.txt on bootfs partition${T_NC}"
+        fi
         IMAGE_WRITTEN=true
         set_checkpoint 9
         send_report "Image successfully written to client's media. Instructed the client to power on the device."
@@ -993,7 +998,7 @@ if (( CHECKPOINT < 10)); then
             send_report "IP address does not match the one in the configuration"
             while true; do
                 echo -e "${T_BLUE}How do you with to proceed?${T_NC}"
-                echo "  1. Update the configuration to match the current IP assigned by router's DHCP - '${online_ip}'"
+                echo "  1. Update the configuration to match the current IP assigned by router's DHCP - '${online_ip}' (requires ssh login)"
                 echo "  2. Keep the configuration's IP address and reconfigure the router later"
                 read -p "Choose an option: " option
                 # Based on user option, proceed with IP configuration

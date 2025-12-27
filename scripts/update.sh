@@ -25,12 +25,12 @@
 binary_name="wormhole-installer"
 symlink_path="/usr/local/bin/${binary_name}"
 endpoint_install="/wh/install"
+endpoint_encryption="/wh/encryption_parms"
 api_domain=${WORMHOLE_API_URL}
 install_url="${WORMHOLE_API_URL}${endpoint_install}"
+encryption_url="${WORMHOLE_API_URL}${endpoint_encryption}"
 distro_url="${install_url}.distro"
 sha_url="${install_url}.sha256"
-key_derivation="-pbkdf2"
-crypto_cipher="-aes-256-cbc"
 
 INSTALL_MODE=0
 while getopts "i" opt; do
@@ -73,12 +73,17 @@ fi
 
 echo "Updating the application from ${api_domain}..."
 
-# Updates the install script and triggers the repacking of the tar to the latest live version
+# Updates the install script and triggers the repacking of the tar on the server to the latest live version
 response=$(curl -f -s -o "${base_dir}/install.sh" -H "Authorization: Bearer ${WORMHOLE_API_KEY}" -w "%{http_code}" "${install_url}")
 if [ $response -ne 200 ]; then
     echo "Error: Server response $response"
     exit 1
 fi
+
+echo "Requesting encryption parameters..."
+encryption_parms=$(curl -s -f -H "Authorization: Bearer ${WORMHOLE_API_KEY}" "${encryption_url}")
+key_derivation=$(echo $encryption_parms | awk {'print $1'})
+crypto_cipher=$(echo $encryption_parms | awk {'print $2'})
 
 new_distro_dir=$(mktemp -d)
 trap 'rm -rf "$new_distro_dir"' EXIT

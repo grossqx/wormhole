@@ -45,6 +45,7 @@ Powered by **Node-RED** and defined by a single *flow.json* file.
 - supervisor:
     - dockge
     - uptime kuma
+    - glances
 - iot
     - nodered
 - storage
@@ -184,8 +185,6 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 
 # TODOs:
 
-- send default wg peer to the server
-- ufw
 - add compression to wh-backup and restore
 
 # Issues:
