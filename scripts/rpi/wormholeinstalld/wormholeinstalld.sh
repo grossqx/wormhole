@@ -443,8 +443,10 @@ if [[ $preflight_checks_passed == true ]]; then
 else
     echo -e "[${wh_prefix}] Can't continue installation! Errors:\n${preflight_errors}" | log
     log_progress_state "Waiting for errors to be resolved..."
-    echo "[${wh_prefix}] Will automatically reboot and retry in ${error_reboot_time} minutes. Reboot manually if ready now." | log
-    shutdown -r +${error_reboot_time}
+    echo "[${wh_prefix}] Will automatically reboot and retry soon. Log in in the next ${error_reboot_time} minutes to make changes." | log
+    sleep $(($error_reboot_time * 60))
+    echo "[${wh_prefix}] Rebooting in 1 minute. Login will be available again after boot." | log
+    shutdown -r +1
     if [[ -n "$preflight_errors" ]]; then
         sdreport_failure "$preflight_errors"
     else

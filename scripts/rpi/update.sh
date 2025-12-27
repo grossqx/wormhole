@@ -26,11 +26,18 @@ if [ -z "$WH_HARDWARE_API_KEY" ] || [ -z "$WH_SERVER_API_URL" ] || [ -z "$WH_CRY
 fi
 
 endpoint_update="/wh/rpi.update"
+endpoint_encryption="/wh/encryption_parms_rpi"
 api_domain=${WH_SERVER_API_URL}
 distro_url="${WH_SERVER_API_URL}${endpoint_update}"
+encryption_url="${WH_SERVER_API_URL}${endpoint_encryption}"
+
 sha_url="${distro_url}.sha256"
 
 echo "Updating the application from ${api_domain}..."
+
+echo "Checking current version..."
+encryption_parms=$(curl -s -f -H "Authorization: Bearer ${WH_HARDWARE_API_KEY}" "${encryption_url}")
+script_version=$(echo $encryption_parms | awk {'print $3'})
 
 new_distro_dir=$(mktemp -d)
 trap 'rm -rf "$new_distro_dir"' EXIT
@@ -69,6 +76,7 @@ rm -f "${new_distro_tar_enc}"
 
 exec_start_path_template="___EXEC_START_PATH___"
 exec_stop_path_template="___EXEC_STOP_PATH___"
+script_version_template="___SCRIPT_VERSION___"
 manifest="${new_distro_dir}/rpi/update.manifest.json"
 
 # Get service file exec paths
@@ -78,13 +86,14 @@ wormholeinstalld_exec_path=$(jq -r ".files.wormholeinstalld.path" "$manifest")
 wormholed_exec_start=$(eval echo "$wormholed_exec_start_path")
 wormholed_exec_stop=$(eval echo "$wormholed_exec_stop_path")
 wormholeinstalld_exec=$(eval echo "$wormholeinstalld_exec_path")
+
 echo "Extracting files..."
 for file_id in $(jq -r '.files | keys | .[]' "$manifest"); do
     source=$(jq -r ".files.\"$file_id\".source" "$manifest")
     path_literal=$(jq -r ".files.\"$file_id\".path" "$manifest")
     path=$(eval echo "$path_literal")
     echo "- ${source} to ${path}..."
-    # Replace teplate to the service file paths
+    # Replace template with service file paths
     if [[ $file_id == "wormholed-service" ]]; then
         sed -i "s|${exec_start_path_template}|${wormholed_exec_start}|g" "${new_distro_dir}${source}"
         sed -i "s|${exec_stop_path_template}|${wormholed_exec_stop}|g" "${new_distro_dir}${source}"
@@ -92,6 +101,10 @@ for file_id in $(jq -r '.files | keys | .[]' "$manifest"); do
     if [[ $file_id == "wormholeinstalld-service" ]]; then
         sed -i "s|${exec_start_path_template}|${wormholeinstalld_exec}|g" "${new_distro_dir}${source}"
     fi
+    if [[ $file_id == "wormhole" ]]; then
+        sed -i "s|${script_version_template}|${script_version}|g" "${new_distro_dir}${source}"
+    fi
+    
     # Copy temp file to install destination
     cp ${new_distro_dir}${source} "${path}"
 done
