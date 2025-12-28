@@ -923,7 +923,7 @@ if (( CHECKPOINT < 9)); then
         get_user_input -e "${T_YELLOW}Press if the Raspberry Pi is powered on and expected to be accessible on the network.${T_NC}"
         send_report "Client confirmed powering on the device"
     else
-        echo -e "${T_RED}Error: imager.sh has failed"
+        echo -e "${T_RED}Error: imager.sh has failed${T_NC}"
         send_report "imager.sh has failed"
         exit 1
     fi
