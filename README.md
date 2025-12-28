@@ -1,5 +1,12 @@
 # Wormhole 
-VPN server installer for Raspberry Pi.
+Installer and manager of a Pi-hosted **Wireguard** VPN server. Includes **Pi-hole** ad blocker and **unbound** DNS resolver.
+
+- Automated install process suitable for headless Raspberry Pi setups
+- docker-compose configuration customizable per-device
+- Pre-configured network settings, ssh, firewall
+- Automatic migration to SSD / USB storage
+- Scheduled updates for Raspberry Pi OS, wormhole script and docker setups
+- Backups over ssh
 
 ## 1. Client
 
@@ -16,7 +23,7 @@ Linux machine with a SD-card-reader or SATA/NVMe reader. *Can also be the same c
 
 Powered by **Node-RED** and defined by a single *flow.json* file.
 
-- Authentication for **clients** and **nodes**
+- Token authentication for **clients** and **nodes**
 - Defines and serves **node configurations** to the installer **clients**
 - Serves configuration updates to the live **nodes**
 - Monitors system state of existing Raspberry Pi **nodes**
@@ -107,7 +114,9 @@ wormhole-installer --help
     
     Alternatively, environment variables can be edited in the flow itself json before importing it. They are in the 'env' section.
 
-5. Deploy the flow.
+5. Set the value of ```crypto_key``` variable in ```/scripts/res/settings.sh``` to a custom string.
+
+6. Deploy the flow.
 
 ### Node:
 1. Connect the storage device with an image written by the **wormhole-installer** to the Raspberry Pi. 
@@ -190,9 +199,6 @@ Primary goal is simpifying the OS flashing and first setup for the user on the c
 # Issues:
 
 Feel free to open an issue if you found a bug or have an improvement suggestion.
-
-## Known upsteam issues:
-[[BUG]: rpi-imager ignores settings in firstrun.sh when writing to nvme](https://github.com/raspberrypi/rpi-imager/issues/1165)
 
 # Acknowledgments
 
