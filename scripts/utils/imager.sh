@@ -9,6 +9,8 @@ FIRSTRUN_SCRIPT=$4
 WRITE_TIMEOUT=10
 VERBOSE=1
 
+default_os_repo_url=https://downloads.raspberrypi.org/os_list_imagingutility_v4.json
+
 ## Text colors:
 source ${base_dir}/res/theme.env
 
@@ -44,7 +46,11 @@ image_dir=$HOME/.cache/wormhole
 rpi_imager_output=$(rpi-imager --version 2>&1)
 RPI_REPO=$(echo $rpi_imager_output | grep -o 'https://.*')
 RPI_IMAGER_VER=$(echo $rpi_imager_output | grep -oP 'version \K\S+')
-echo "Current Raspberry repository is ${RPI_REPO}"
+if [ -z "$RPI_REPO" ]; then
+    echo "Warning: Failed to parse Raspberry Pi OS repository from 'rpi-imager --version' output. Using backup hardcoded URL"
+    RPI_REPO="${default_os_repo_url}"
+fi
+echo "Current rpi-imager version - ${RPI_IMAGER_VER}. OS repository URL is '${RPI_REPO}'"
 echo "Fetching data on OS images..."
 data=$(curl -s "$RPI_REPO")
 if [ -z "$data" ]; then
