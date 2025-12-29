@@ -52,11 +52,6 @@
                 "type": "str"
             },
             {
-                "name": "CRYPTO_KEY",
-                "value": "seed",
-                "type": "str"
-            },
-            {
                 "name": "MASTER_KEY",
                 "value": "",
                 "type": "str"

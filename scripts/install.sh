@@ -27,6 +27,14 @@ endpoint_update="/wh/install.update"
 api_domain="${URL%${endpoint_install}}"
 install_from_server_command="curl -f -s -o install.sh -H \"Authorization: Bearer <TOKEN>\" \"<URL>/wh/install\""
 
+update_bashrc() {
+    local var_name=$1
+    local var_value=$2
+    local target="$HOME/.bashrc"
+    sed -i.bak "/export ${var_name}=/d" "$target"
+    sed -i "1i export ${var_name}='${var_value}'" "$target"
+}
+
 if [ "$(ls -A . | grep -v "$(basename "${BASH_SOURCE[0]}")")" ]; then
     echo "Warning: The current directory $(pwd) is not empty. Proceeding may overwrite existing files."
     echo "This script is designed to download and unpack files, and it's best to run it"
@@ -45,7 +53,7 @@ if [[ -z "$TOKEN" || -z "$api_domain" || -z "$CRYPTO_KEY" ]]; then
         echo "To update it to the latest version:"
         echo "  Option 1 - run: ./update.sh"
         echo "  Option 2 - run: ${install_from_server_command}"
-        echo "To change the server URL and API key configured before and and update:"
+        echo "To change the server URL and API key configured before and update:"
         echo "  Option 1 - run: ./install.sh <URL> <TOKEN> <CRYPTO_KEY>"
         echo "  Option 2 - manually edit: ~/.bashrc and restart the terminal"
         exit 1
@@ -53,52 +61,33 @@ if [[ -z "$TOKEN" || -z "$api_domain" || -z "$CRYPTO_KEY" ]]; then
 fi
 
 if [ -n "$TOKEN" ]; then
-    if grep -q "export WORMHOLE_API_KEY=" ~/.bashrc; then
-        echo "Found existing WORMHOLE_API_KEY in ~/.bashrc. Updating its value."
-        sed -i.bak -E "s|^(export WORMHOLE_API_KEY=).*$|export WORMHOLE_API_KEY='${TOKEN}'|" ~/.bashrc
-    else
-        echo "WORMHOLE_API_KEY will be stored in ~/.bashrc."
-        echo "export WORMHOLE_API_KEY='${TOKEN}'" >> ~/.bashrc
-    fi
+    update_bashrc "WORMHOLE_API_KEY" "$TOKEN"
 else
     echo "No API key provided as arg. Using environment variable."
 fi
 
 if [ -n "$api_domain" ]; then
-    if grep -q "export WORMHOLE_API_URL=" ~/.bashrc; then
-        echo "Found existing WORMHOLE_API_URL in ~/.bashrc. Updating its value."
-        sed -i.bak -E "s|^(export WORMHOLE_API_URL=).*$|export WORMHOLE_API_URL='${api_domain}'|" ~/.bashrc
-    else
-        echo "WORMHOLE_API_URL will be stored in ~/.bashrc."
-        echo "export WORMHOLE_API_URL='${api_domain}'" >> ~/.bashrc
-    fi
+    update_bashrc "WORMHOLE_API_URL" "$api_domain"
 else
     echo "No API URL provided as arg. Using environment variable."
 fi
 
 if [ -n "$CRYPTO_KEY" ]; then
-    if grep -q "export WORMHOLE_CRYPTO_KEY=" ~/.bashrc; then
-        echo "Found existing WORMHOLE_CRYPTO_KEY in ~/.bashrc. Updating its value."
-        sed -i.bak -E "s|^(export WORMHOLE_CRYPTO_KEY=).*$|export WORMHOLE_CRYPTO_KEY='${CRYPTO_KEY}'|" ~/.bashrc
-    else
-        echo "WORMHOLE_CRYPTO_KEY will be stored in ~/.bashrc."
-        echo "export WORMHOLE_CRYPTO_KEY='${CRYPTO_KEY}'" >> ~/.bashrc
-    fi
+    update_bashrc "WORMHOLE_CRYPTO_KEY" "$CRYPTO_KEY"
 else
     echo "No crypto key provided as arg. Using environment variable."
 fi
 
 source $HOME/.bashrc
-
 if [ -z "$WORMHOLE_API_KEY" ] || [ -z "$WORMHOLE_API_URL" ] || [ -z "$WORMHOLE_CRYPTO_KEY" ]; then
-    echo "Error: One of the environment variables (WORMHOLE_API_KEY, WORMHOLE_API_URL, WORMHOLE_CRYPTO_KEY) are missing after sourcing ~/.bashrc." >&2
+    echo "Error: One of the environment variables (WORMHOLE_API_KEY, WORMHOLE_API_URL, WORMHOLE_CRYPTO_KEY) is missing." >&2
     exit 1
 fi
 
 update_url="${WORMHOLE_API_URL}${endpoint_update}"
 
 response=$(curl -f -s -o update.sh -H "Authorization: Bearer ${WORMHOLE_API_KEY}" -w "%{http_code}" "${update_url}")
-if [ $response -ne 200 ]; then
+if [ "$response" -ne 200 ]; then
     echo "Error: Failed to download update.sh. Server response $response"
     exit 1
 fi
