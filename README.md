@@ -107,7 +107,7 @@ wormhole-installer --help
 
     To get to the environment variable editor in Node-RED GUI, double-click the flow's tab name -> Environment Variables (button).
     
-    Alternatively, environment variables can be edited in the flow itself json before importing it. They are in the 'env' section.
+    Alternatively, environment variables can be set in the 'env' section of the flow json file before importing it.
 
 5. Set the value of ```crypto_key``` variable in ```/scripts/res/settings.sh``` to a custom string.
 
