@@ -13,7 +13,7 @@ services:
       - ${DOCKGE_UI_PORT}:5001
   uptime-kuma:
     container_name: uptime-kuma
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:2
     volumes:
       - ${STORAGE_PATH}/uptime-kuma/data:/app/data
     restart: always
