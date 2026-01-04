@@ -47,16 +47,11 @@ Powered by **Node-RED** and defined by a single *flow.json* file.
     - pihole
     - unbound
     - wireguard
-- network:
-    - NGINX Proxy Manager
+    - wg-portal
 - supervisor:
     - dockge
     - uptime kuma
     - glances
-- iot
-    - nodered
-- storage
-    - syncthing
 
 # Installation
 
