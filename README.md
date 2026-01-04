@@ -47,6 +47,7 @@ Powered by **Node-RED** and defined by a single *flow.json* file.
     - pihole
     - unbound
     - wireguard
+    - wg-portal
 - network:
     - NGINX Proxy Manager
 - supervisor:
