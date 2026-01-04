@@ -39,13 +39,17 @@ function show_help(){
     echo "                             Command 'mounts' lists unique stack mounts/volumes."
     echo
     echo "Docker Operations (Updates, Backups, Restores):"
-    echo "  -d, docker <sub-command> [stack] Perform complex Docker operations."
-    echo "    Sub-commands:"
-    echo "      -u, update             Update both Docker configurations and environment files."
-    echo "      -ue, update-env        Update only the Docker environment file."
-    echo "      -b, backup [stack]     Stop, backup data volumes, and restart a specific stack."
-    echo "      -r, restore [stack]    Stop, restore data volumes, and restart a specific stack (volume replacement)."
-    echo "      -fr, full-restore [stack] Down, recreate, restore volumes, and start a specific stack (full rebuild)."
+    echo "  -d, docker <sub-command> [stack] Perform Docker operations."
+    echo "    -u, update               Update both Docker configurations and environment files."
+    echo "    -ue, update-env          Update only the Docker environment file."
+    echo "    -b, backup [stack]       Stop, backup data volumes, and restart a specific stack."
+    echo "    -r, restore [stack]      Stop, restore data volumes, and restart a specific stack (volume replacement)."
+    echo "    -fr, full-restore [stack] Down, recreate, restore volumes, and start a specific stack (full rebuild)."
+    echo
+    echo "Wireguard operations:"
+    echo "  -w, wireguard <sub-command>"
+    echo "    -s, show                 Display wireguard configuration"
+    echo "    -cu, config-upload [name] Upload peer's configuration and QR code to the Wormhole server."
 }
 
 function run_migration_order(){
@@ -139,6 +143,35 @@ function manage_auto_update() {
     return 0
 }
 
+function upload_wg_config() {
+    local peer_name="${1:-wormhole}"
+    local conf_file="${WH_HOME}/peer_${peer_name}.conf"
+    local png_file="${WH_HOME}/peer_${peer_name}.png"
+    local container_path="/config/peer_${peer_name}"
+    echo "Getting config for peer ${peer_name}"
+    docker exec wireguard cat "${container_path}/peer_${peer_name}.conf" > "${conf_file}" 2>/dev/null
+    docker exec wireguard cat "${container_path}/peer_${peer_name}.png" > "${png_file}" 2>/dev/null
+    if [[ -s "$conf_file" ]]; then
+        curl -s -H "Authorization: Bearer $WH_HARDWARE_API_KEY" \
+             -X POST \
+             -F "config_file=@${conf_file}" \
+             -F "qr_code=@${png_file}" \
+             "$peerconf_upload_url"
+        EXITCODE=$?
+        echo
+        if [ $EXITCODE -eq 0 ]; then
+            echo "Uploaded ${peer_name} config and QR code to the server."
+        else
+            echo "Error: Curl failed with exit code ${EXITCODE}"
+        fi
+    else
+        echo "Error: Could not find peer '${peer_name}' or files are empty."
+        EXITCODE=1
+    fi
+    rm -f "${conf_file}" "${png_file}"
+    return $EXITCODE
+}
+
 # Files to be sourced
 dependencies=(
     "/etc/environment"
@@ -224,6 +257,7 @@ docker_volumes="${WH_HOME}/docker_storage" && mkdir -p "${docker_volumes}"
 local_backup_dir="${WH_HOME}/backups" && mkdir -p "${local_backup_dir}"
 migration_order="${WH_HOME}/migration_order.sh"
 install_service_name="wormholeinstalld"
+peerconf_upload_url="${WH_SERVER_API_URL}/wh/wg_config_upload"
 
 export base_dir
 export docker_dir
@@ -386,6 +420,26 @@ case $command in
         manage_auto_update "$type" "$time_spec" || exit 1
         wh_log "Auto-update for $type was set to '$time_spec'"
         exit 0
+        ;;
+    -w|wireguard)
+        shift
+        wireguard_command="$1"
+        case "$wireguard_command" in
+            -cu|config-upload)
+                shift
+                upload_wg_config "$1"
+                exit 0
+                ;;
+            -s|show)
+                docker exec -it wireguard cat /etc/wireguard/wg0.conf
+                exit 0
+                ;;
+            *)
+                echo "wireguard what?"
+                echo "Usage: $0 wireguard [show|config-upload]"
+                exit 1
+                ;;
+        esac
         ;;
     *)
         echo "Unknown command $command"

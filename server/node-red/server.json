@@ -791,8 +791,7 @@
             "8894723dfb154499",
             "c98e76a0d083ea12",
             "4a4feda0b441be99",
-            "7b19ca4f2bdf34be",
-            "73d911ef7f6005ed"
+            "7b19ca4f2bdf34be"
         ],
         "x": 134,
         "y": 2599,
@@ -1027,12 +1026,15 @@
             "d837c53000e29170",
             "7da1a1a95871aa70",
             "fd4f8e6d724cee32",
-            "4879153ae5515b86"
+            "4879153ae5515b86",
+            "10a55bfeb45c74e8",
+            "01092c838d4f9018",
+            "7e080b3b51e27a59"
         ],
         "x": 134,
-        "y": 1879,
-        "w": 1392,
-        "h": 142
+        "y": 1839,
+        "w": 1592,
+        "h": 202
     },
     {
         "id": "2723327c8417c224",
@@ -1549,11 +1551,11 @@
         "z": "d833cbb1fb389561",
         "g": "5c1238cd7066641d",
         "x": 880,
-        "y": 1920,
+        "y": 1880,
         "wires": [
             [
                 "d837c53000e29170",
-                "7da1a1a95871aa70"
+                "10a55bfeb45c74e8"
             ]
         ]
     },
@@ -2387,7 +2389,7 @@
         "z": "d833cbb1fb389561",
         "g": "fd62441eb4cd73fb",
         "name": "set encryption parameters",
-        "func": "const outputMsgs = [];\nconst cipher = flow.get(\"CRYPTO_CIPHER\");\nconst key_derivation = flow.get(\"KEY_DERIVATION\");\nconst crypto_key = env.get(\"CRYPTO_KEY\");\n\nfor (const userKey in msg.payload.users) {\n    const user = msg.payload.users[userKey];\n    for (const config_id in user) {\n        const config = user[config_id];\n        if (config && typeof config === 'object') {\n            if (config.wifi) {\n                if (config.wifi.encrypted == false){\n                    const password = config.wifi.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.wifi`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n            if (config.ssh) {\n                if (config.ssh.encrypted == false){\n                    const password = config.ssh.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.ssh`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n        }\n    }\n}\n\nreturn [outputMsgs];",
+        "func": "const outputMsgs = [];\nconst cipher = flow.get(\"CRYPTO_CIPHER\");\nconst key_derivation = flow.get(\"KEY_DERIVATION\");\nconst crypto_key = flow.get(\"CRYPTO_KEY\");\n\nfor (const userKey in msg.payload.users) {\n    const user = msg.payload.users[userKey];\n    for (const config_id in user) {\n        const config = user[config_id];\n        if (config && typeof config === 'object') {\n            if (config.wifi) {\n                if (config.wifi.encrypted == false){\n                    const password = config.wifi.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.wifi`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n            if (config.ssh) {\n                if (config.ssh.encrypted == false){\n                    const password = config.ssh.password;\n                    const path = `msg.payload.users.${userKey}.${config_id}.ssh`;\n                    let newMsg = new Object;\n                    newMsg.data = msg.payload;\n                    newMsg.update = { \n                        command: \"echo '\" + password + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -salt -pass pass:'\" + crypto_key + \"' | base64\",\n                        password: password, \n                        path: path\n                    } \n                    outputMsgs.push(newMsg);\n                }\n            }\n        }\n    }\n}\n\nreturn [outputMsgs];",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2638,8 +2640,7 @@
         "wires": [
             [
                 "295e8becc5dd6358",
-                "4a4feda0b441be99",
-                "73d911ef7f6005ed"
+                "4a4feda0b441be99"
             ]
         ]
     },
@@ -3406,7 +3407,7 @@
         "z": "d833cbb1fb389561",
         "g": "89b44b76c3f4b136",
         "name": "set decrypt parameters",
-        "func": "const cipher = flow.get(\"CRYPTO_CIPHER\");\nconst key_derivation = flow.get(\"KEY_DERIVATION\");\nconst crypto_key = env.get(\"CRYPTO_KEY\");\n\nmsg.command = \"echo '\" + msg.payload + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -base64 -d -salt -pass pass:'\" + crypto_key + \"'\";\n\nreturn msg;",
+        "func": "const cipher = flow.get(\"CRYPTO_CIPHER\");\nconst key_derivation = flow.get(\"KEY_DERIVATION\");\nconst crypto_key = flow.get(\"CRYPTO_KEY\");\n\nmsg.command = \"echo '\" + msg.payload + \"' | openssl enc \" + cipher + \" \" + key_derivation + \" -base64 -d -salt -pass pass:'\" + crypto_key + \"'\";\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7548,7 +7549,7 @@
         "z": "d833cbb1fb389561",
         "g": "7da362d67a6153a1",
         "name": "add encryption",
-        "func": "msg.filepath_enc=msg.filepath+\".enc\";\nmsg.payload = \"openssl enc -in \" + msg.filepath + \" \" + flow.get(\"CRYPTO_CIPHER\") + \" \" + flow.get(\"KEY_DERIVATION\") + \" -salt -out \" + msg.filepath_enc + \" -k \" + env.get(\"CRYPTO_KEY\")\n\nreturn msg;",
+        "func": "msg.filepath_enc=msg.filepath+\".enc\";\nmsg.payload = \"openssl enc -in \" + msg.filepath + \" \" + flow.get(\"CRYPTO_CIPHER\") + \" \" + flow.get(\"KEY_DERIVATION\") + \" -salt -out \" + msg.filepath_enc + \" -k \" + flow.get(\"CRYPTO_KEY\")\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -9277,7 +9278,7 @@
         "skipBodyParsing": false,
         "swaggerDoc": "",
         "x": 280,
-        "y": 1920,
+        "y": 1880,
         "wires": [
             [
                 "389077b9c8186c2d"
@@ -9293,7 +9294,7 @@
         "statusCode": "200",
         "headers": {},
         "x": 1320,
-        "y": 1920,
+        "y": 1880,
         "wires": []
     },
     {
@@ -9310,8 +9311,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1390,
-        "y": 1980,
+        "x": 1590,
+        "y": 1960,
         "wires": []
     },
     {
@@ -9325,7 +9326,7 @@
             "f9b03f4ad3dcce84"
         ],
         "x": 815,
-        "y": 1980,
+        "y": 1940,
         "wires": []
     },
     {
@@ -9348,7 +9349,7 @@
         "repair": false,
         "outputs": 2,
         "x": 670,
-        "y": 1920,
+        "y": 1880,
         "wires": [
             [
                 "096446635cd4c295"
@@ -9370,7 +9371,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 500,
-        "y": 1920,
+        "y": 1880,
         "wires": [
             [
                 "24c2ee957c306a7a"
@@ -9461,7 +9462,7 @@
         "to": "",
         "reg": false,
         "x": 1020,
-        "y": 1920,
+        "y": 1880,
         "wires": [
             [
                 "85ff4a532dbaa529"
@@ -9474,15 +9475,15 @@
         "z": "d833cbb1fb389561",
         "g": "5c1238cd7066641d",
         "name": "set file",
-        "func": "msg.payload = msg.req.files[0].buffer;\nmsg.filename = env.get(\"VPN_CONFIGS\") + \"/\"\n    + msg.config[\"install-user\"] + \"/\"\n    + msg.config[\"config-name\"] + \"-\"\n    + msg.config[\"install-id\"] + \".conf\";\nreturn msg;",
+        "func": "msg.payload = msg.req.files[0].buffer;\nmsg.filename = env.get(\"VPN_CONFIGS\") + \"/\"\n    + msg.config[\"install-user\"] + \"/\"\n    + msg.config[\"config-name\"] + \"-\" + msg.config[\"install-id\"] + \"/\" \n    + msg.req.files[0].originalname.replace(\".conf\", \"\") + \"/\" \n    + \"wg-\" + msg.config[\"config-name\"] + \".conf\"; \nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 990,
-        "y": 1980,
+        "x": 1250,
+        "y": 1960,
         "wires": [
             [
                 "4879153ae5515b86"
@@ -9508,7 +9509,7 @@
         "name": "RPi endpoints",
         "info": "",
         "x": 230,
-        "y": 1980,
+        "y": 1940,
         "wires": []
     },
     {
@@ -9523,8 +9524,8 @@
         "createDir": true,
         "overwriteFile": "true",
         "encoding": "none",
-        "x": 1180,
-        "y": 1980,
+        "x": 1400,
+        "y": 1960,
         "wires": [
             [
                 "ad82a8f5c04c3dd7"
@@ -9623,7 +9624,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 7000,
+        "x": 7020,
         "y": 900,
         "wires": []
     },
@@ -10036,24 +10037,6 @@
         ]
     },
     {
-        "id": "73d911ef7f6005ed",
-        "type": "debug",
-        "z": "d833cbb1fb389561",
-        "g": "1fa579e57119388b",
-        "name": "debug 4",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 450,
-        "y": 2660,
-        "wires": []
-    },
-    {
         "id": "e778aa308b663efa",
         "type": "http in",
         "z": "d833cbb1fb389561",
@@ -10177,6 +10160,89 @@
         "wires": [
             [
                 "292ef4e83196586b"
+            ]
+        ]
+    },
+    {
+        "id": "10a55bfeb45c74e8",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "5c1238cd7066641d",
+        "name": "numfiles",
+        "func": "msg.numfiles=msg.req.files.length;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 1960,
+        "wires": [
+            [
+                "01092c838d4f9018"
+            ]
+        ]
+    },
+    {
+        "id": "01092c838d4f9018",
+        "type": "switch",
+        "z": "d833cbb1fb389561",
+        "g": "5c1238cd7066641d",
+        "name": "",
+        "property": "numfiles",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "2",
+                "vt": "num"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 3,
+        "x": 1090,
+        "y": 1960,
+        "wires": [
+            [],
+            [
+                "7da1a1a95871aa70"
+            ],
+            [
+                "7da1a1a95871aa70",
+                "7e080b3b51e27a59"
+            ]
+        ]
+    },
+    {
+        "id": "7e080b3b51e27a59",
+        "type": "function",
+        "z": "d833cbb1fb389561",
+        "g": "5c1238cd7066641d",
+        "name": "set file",
+        "func": "msg.payload = msg.req.files[1].buffer;\nmsg.filename = env.get(\"VPN_CONFIGS\") + \"/\"\n    + msg.config[\"install-user\"] + \"/\"\n    + msg.config[\"config-name\"] + \"-\" + msg.config[\"install-id\"] + \"/\" \n    + msg.req.files[0].originalname.replace(\".conf\", \"\") + \"/\" \n    + \"wg-\" + msg.config[\"config-name\"] + \".png\"; \nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1250,
+        "y": 2000,
+        "wires": [
+            [
+                "4879153ae5515b86"
             ]
         ]
     }
